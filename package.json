@@ -1,0 +1,19 @@
+{
+        "name": "sockjs-luvit",
+        "description": "SockJS implemented in luvit",
+        "keywords": ["websocket", "sockjs", "luvit"],
+        "author": "Vladimir Dronnikov",
+        "version": "0.0.1",
+        "licenses": [{
+          "type" : "MIT",
+          "url" : "https://github.com/dvv/sockjs-luvit/raw/master/LICENSE"
+        }],
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/dvv/sockjs-luvit.git"
+        },
+        "dependencies": {
+        },
+        "devDependencies": {
+        }
+}

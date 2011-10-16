@@ -1,0 +1,71 @@
+diff --git a/lib/http.lua b/lib/http.lua
+index 6d7d429..f0b5dcd 100644
+--- a/lib/http.lua
++++ b/lib/http.lua
+@@ -41,7 +41,7 @@ function HTTP.create_server(host, port, on_connection)
+       on_headers_complete = function (info)
+         request.method = info.method
+         if info.upgrade then
+-          server:emit("upgrade", request, client)
++          server:emit("upgrade", request, response)
+         else
+           on_connection(request, response)
+         end
+diff --git a/src/luv.c b/src/luv.c
+index 7d40269..9bac004 100644
+--- a/src/luv.c
++++ b/src/luv.c
+@@ -66,6 +66,7 @@ static const luaL_reg luv_f[] = {
+   {"tcp_getpeername", luv_tcp_getpeername},
+   {"tcp_connect", luv_tcp_connect},
+   {"tcp_connect6", luv_tcp_connect6},
++  {"tcp_nodelay", luv_tcp_nodelay},
+ 
+   // Pipe functions
+   {"new_pipe", luv_new_pipe},
+@@ -177,6 +178,7 @@ static const luaL_reg luv_tcp_m[] = {
+   {"getpeername", luv_tcp_getpeername},
+   {"connect", luv_tcp_connect},
+   {"connect6", luv_tcp_connect6},
++  {"nodelay", luv_tcp_nodelay},
+   {NULL, NULL}
+ };
+ 
+diff --git a/src/luv_tcp.c b/src/luv_tcp.c
+index eb78238..10ddd9a 100644
+--- a/src/luv_tcp.c
++++ b/src/luv_tcp.c
+@@ -63,6 +63,22 @@ int luv_tcp_bind6(lua_State* L) {
+   return 0;
+ }
+ 
++int luv_tcp_nodelay(lua_State* L) {
++  int before = lua_gettop(L);
++  uv_tcp_t* handle = (uv_tcp_t*)luv_checkudata(L, 1, "tcp");
++  int value = lua_toboolean(L, 2);
++
++  int status = setsockopt(handle->fd, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(int));
++
++  if (status == -1) {
++    uv_err_t err = uv_last_error(uv_default_loop());
++    return luaL_error(L, "tcp_nodelay: %s", uv_strerror(err));
++  }
++
++  assert(lua_gettop(L) == before);
++  return 0;
++}
++
+ int luv_tcp_getsockname(lua_State* L) {
+   int before = lua_gettop(L);
+   uv_tcp_t* handle = (uv_tcp_t*)luv_checkudata(L, 1, "tcp");
+diff --git a/src/luv_tcp.h b/src/luv_tcp.h
+index a473000..f7415c9 100644
+--- a/src/luv_tcp.h
++++ b/src/luv_tcp.h
+@@ -27,5 +27,6 @@ int luv_tcp_getsockname(lua_State* L);
+ int luv_tcp_getpeername(lua_State* L);
+ int luv_tcp_connect(lua_State* L);
+ int luv_tcp_connect6(lua_State* L);
++int luv_tcp_nodelay(lua_State* L);
+ 
+ #endif

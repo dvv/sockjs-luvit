@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./luvit echo.lua
