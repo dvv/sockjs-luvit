@@ -1,26 +1,5 @@
-diff --git a/deps/luajit b/deps/luajit
---- a/deps/luajit
-+++ b/deps/luajit
-@@ -1 +1 @@
--Subproject commit 120c3adbff2acbbee5932f28345cde292ef044ec
-+Subproject commit 120c3adbff2acbbee5932f28345cde292ef044ec-dirty
-diff --git a/examples/timers-simple.lua b/examples/timers-simple.lua
-index 4015e10..2bc4499 100644
---- a/examples/timers-simple.lua
-+++ b/examples/timers-simple.lua
-@@ -9,5 +9,10 @@ Timer.set_timeout(1000, function ()
-   p("on_timeout!")
-   Timer.clear_timer(interval)
- end)
-+print("Starting 2000ms timer with parameters")
-+Timer.set_timeout(1000, function (...)
-+  p("on_timeout!", ...)
-+  Timer.clear_timer(interval)
-+end, 1, 2, 3)
- 
- 
 diff --git a/lib/http.lua b/lib/http.lua
-index 6d7d429..fee1424 100644
+index 6d7d429..5ceed7c 100644
 --- a/lib/http.lua
 +++ b/lib/http.lua
 @@ -41,7 +41,7 @@ function HTTP.create_server(host, port, on_connection)
@@ -28,11 +7,11 @@ index 6d7d429..fee1424 100644
          request.method = info.method
          if info.upgrade then
 -          server:emit("upgrade", request, client)
-+          --server:emit("upgrade", request, response)
++          server:emit("upgrade", request, response)
          else
            on_connection(request, response)
          end
-@@ -54,12 +54,17 @@ function HTTP.create_server(host, port, on_connection)
+@@ -54,11 +54,11 @@ function HTTP.create_server(host, port, on_connection)
          request:emit('end')
        end
      })
@@ -41,19 +20,13 @@ index 6d7d429..fee1424 100644
      client:on("data", function (chunk, len)
        if len == 0 then return end
 -      local nparsed = parser:execute(chunk, 0, len)
+-      if nparsed < len then
 +      local nparsed, upgrade = parser:execute(chunk, 0, len)
-       if nparsed < len then
--        request:emit("error", "parse error")
-+        if upgrade then
-+          request.head = chunk:sub(nparsed + 1)
-+          server:emit('upgrade', request, response)
-+        else
-+          request:emit("error", "parse error")
-+        end
++      if nparsed < len and not upgrade then
+         request:emit("error", "parse error")
        end
      end)
- 
-@@ -68,7 +73,7 @@ function HTTP.create_server(host, port, on_connection)
+@@ -68,7 +68,7 @@ function HTTP.create_server(host, port, on_connection)
      end)
  
    end)
@@ -62,35 +35,6 @@ index 6d7d429..fee1424 100644
    return server
  end
  
-diff --git a/lib/timer.lua b/lib/timer.lua
-index 4a66b91..57725e0 100644
---- a/lib/timer.lua
-+++ b/lib/timer.lua
-@@ -1,18 +1,20 @@
- local UV = require('uv')
- 
--local function set_timeout(duration, callback)
-+local function set_timeout(duration, callback, ...)
-+  local args = {...}
-   local timer = UV.new_timer()
-   timer:start(duration, 0, function (status)
-     timer:close()
--    callback()
-+    callback(unpack(args))
-   end)
-   return timer
- end
- 
--local function set_interval(period, callback)
-+local function set_interval(period, callback, ...)
-+  local args = {...}
-   local timer = UV.new_timer()
-   timer:start(period, period, function (status)
--    callback()
-+    callback(unpack(args))
-   end)
-   return timer
- end
 diff --git a/src/lhttp_parser.c b/src/lhttp_parser.c
 index 4046e96..174f01c 100644
 --- a/src/lhttp_parser.c
