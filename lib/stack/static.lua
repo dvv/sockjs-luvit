@@ -80,7 +80,7 @@ return function(mount, root, options)
   local NUM3 = 0
   local serve
   serve = function(self, file, range, cache_it)
-    local headers = copy(file.headers)
+    local headers = extend({ }, file.headers)
     headers['Date'] = date('%c')
     local size = file.size
     local start = 0
