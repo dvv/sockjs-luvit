@@ -585,6 +585,7 @@ return function(options)
       return 
     end,
     ['(%w+) ${prefix}/[^./]+/([^./]+)/websocket[/]?$' % options] = function(self, nxt, verb, sid)
+p('HERE')
       if true then
         return self:send(404)
       end
