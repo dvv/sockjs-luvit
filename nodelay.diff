@@ -20,7 +20,7 @@ index 4015e10..2bc4499 100644
  
  
 diff --git a/lib/http.lua b/lib/http.lua
-index 6d7d429..5ceed7c 100644
+index 6d7d429..fee1424 100644
 --- a/lib/http.lua
 +++ b/lib/http.lua
 @@ -41,7 +41,7 @@ function HTTP.create_server(host, port, on_connection)
@@ -28,11 +28,11 @@ index 6d7d429..5ceed7c 100644
          request.method = info.method
          if info.upgrade then
 -          server:emit("upgrade", request, client)
-+          server:emit("upgrade", request, response)
++          --server:emit("upgrade", request, response)
          else
            on_connection(request, response)
          end
-@@ -54,11 +54,11 @@ function HTTP.create_server(host, port, on_connection)
+@@ -54,12 +54,17 @@ function HTTP.create_server(host, port, on_connection)
          request:emit('end')
        end
      })
@@ -41,13 +41,19 @@ index 6d7d429..5ceed7c 100644
      client:on("data", function (chunk, len)
        if len == 0 then return end
 -      local nparsed = parser:execute(chunk, 0, len)
--      if nparsed < len then
 +      local nparsed, upgrade = parser:execute(chunk, 0, len)
-+      if nparsed < len and not upgrade then
-         request:emit("error", "parse error")
+       if nparsed < len then
+-        request:emit("error", "parse error")
++        if upgrade then
++          request.head = chunk:sub(nparsed + 1)
++          server:emit('upgrade', request, response)
++        else
++          request:emit("error", "parse error")
++        end
        end
      end)
-@@ -68,7 +68,7 @@ function HTTP.create_server(host, port, on_connection)
+ 
+@@ -68,7 +73,7 @@ function HTTP.create_server(host, port, on_connection)
      end)
  
    end)

@@ -585,7 +585,7 @@ return function(options)
       return 
     end,
     ['(%w+) ${prefix}/[^./]+/([^./]+)/websocket[/]?$' % options] = function(self, nxt, verb, sid)
-p('HERE')
+p('HERE', self.req.head)
       if true then
         return self:send(404)
       end
@@ -609,7 +609,7 @@ p('HERE')
       location = location .. '://' .. self.req.headers.host .. self.req.url
       local ver = self.req.headers['sec-websocket-version']
       local shaker = require('lib/stack/sockjs-websocket').WebHandshakeHixie76
-      return shaker(options, self.req, self, (head or ''), origin, location)
+      return shaker(options, self.req, self, (self.req.head or ''), origin, location)
     end
   }
   return routes
