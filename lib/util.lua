@@ -1,15 +1,16 @@
 String = require('string')
+local sub, match, gsub, gmatch, byte, char, format = String.sub, String.match, String.gsub, String.gmatch, String.byte, String.char, String.format
 String.interpolate = function(self, data)
   if not data then
     return self
   end
   if type(data) == 'table' then
     if data[1] then
-      return String.format(self, unpack(b))
+      return format(self, unpack(b))
     end
-    return String.gsub(self, '($%b{})', function(w)
-      local var = String.sub(w, 3, -2)
-      local n, def = String.match(var, '([^|]-)|(.*)')
+    return gsub(self, '($%b{})', function(w)
+      local var = sub(w, 3, -2)
+      local n, def = match(var, '([^|]-)|(.*)')
       if n then
         var = n
       end
@@ -23,43 +24,71 @@ String.interpolate = function(self, data)
 end
 getmetatable('').__mod = String.interpolate
 String.tohex = function(str)
-  return (String.gsub(str, '(.)', function(c)
-    return String.format('%02x', String.byte(c))
+  return (gsub(str, '(.)', function(c)
+    return format('%02x', byte(c))
   end))
 end
 String.fromhex = function(str)
-  return (String.gsub(str, '(%x%x)', function(h)
-    return String.format('%c', tonumber(h, 16))
+  return (gsub(str, '(%x%x)', function(h)
+    local n = tonumber(h, 16)
+    if n ~= 0 then
+      return format('%c', n)
+    else
+      return '\000'
+    end
   end))
 end
+local base64_table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+String.base64 = function(data)
+  return ((gsub(data, '.', function(x)
+    local r, b = '', byte(x)
+    for i = 8, 1, -1 do
+      r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
+    end
+    return r
+  end) .. '0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+    if #x < 6 then
+      return ''
+    end
+    local c = 0
+    for i = 1, 6 do
+      c = c + (sub(x, i, i) == '1' and 2 ^ (6 - i) or 0)
+    end
+    return sub(base64_table, c + 1, c + 1)
+  end) .. ({
+    '',
+    '==',
+    '='
+  })[#data % 3 + 1])
+end
 String.escape = function(str)
-  return String.gsub(str, '<', '&lt;'):gsub('>', '&gt;'):gsub('"', '&quot;')
+  return gsub(str, '<', '&lt;'):gsub('>', '&gt;'):gsub('"', '&quot;')
 end
 String.unescape = function(str)
   return str
 end
 String.url_decode = function(str)
-  str = String.gsub(str, '+', ' ')
-  str = String.gsub(str, '%%(%x%x)', function(h)
-    return String.char(tonumber(h, 16))
+  str = gsub(str, '+', ' ')
+  str = gsub(str, '%%(%x%x)', function(h)
+    return char(tonumber(h, 16))
   end)
-  str = String.gsub(str, '\r\n', '\n')
+  str = gsub(str, '\r\n', '\n')
   return str
 end
 String.url_encode = function(str)
   if str then
-    str = String.gsub(str, '\n', '\r\n')
-    str = String.gsub(str, '([^%w ])', function(c)
-      return String.format('%%%02X', String.byte(c))
+    str = gsub(str, '\n', '\r\n')
+    str = gsub(str, '([^%w ])', function(c)
+      return format('%%%02X', byte(c))
     end)
-    str = String.gsub(str, ' ', '+')
+    str = gsub(str, ' ', '+')
   end
   return str
 end
 String.parse_query = function(str)
   local allvars = { }
-  for pair in String.gmatch(tostring(str), '[^&]+') do
-    local key, value = String.match(pair, '([^=]*)=(.*)')
+  for pair in gmatch(tostring(str), '[^&]+') do
+    local key, value = match(pair, '([^=]*)=(.*)')
     if key then
       allvars[key] = String.url_decode(value)
     end
@@ -68,7 +97,7 @@ String.parse_query = function(str)
 end
 _G.Table = require('table')
 _G.d = function(...)
-  if env.DEBUG then
+  if process.env.DEBUG then
     return p(...)
   end
 end
