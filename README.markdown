@@ -1,6 +1,6 @@
 # SockJS-luvit
 
-SockJS server written in [Lua](http://www.lua.org) to run under [Luvit](https://github.com/creationix/luvit). First draft supports all transports but native WebSocket. Stay tuned...
+SockJS server written in [Lua](http://www.lua.org) to run under [Luvit](https://github.com/creationix/luvit). Supports all transports.
 
 ## Installation
 

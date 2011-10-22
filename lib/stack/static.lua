@@ -38,7 +38,7 @@ stream_file = function(path, offset, size, progress, callback)
           if progress then
             return progress(chunk, readchunk)
           else
-            return readchunk
+            return readchunk()
           end
         end
       end)
@@ -81,7 +81,6 @@ return function(mount, root, options)
   local serve
   serve = function(self, file, range, cache_it)
     local headers = extend({ }, file.headers)
-    headers['Date'] = date('%c')
     local size = file.size
     local start = 0
     local stop = size - 1
@@ -101,7 +100,7 @@ return function(mount, root, options)
     end
     if file.data then
       return self:safe_write(range and file.data.sub(start + 1, stop - start + 1) or file.data, function(...)
-        return self:close()
+        return self:finish()
       end)
     else
       if range then
@@ -118,7 +117,7 @@ return function(mount, root, options)
       end
       local eof
       eof = function(err)
-        self:close()
+        self:finish()
         if cache_it then
           NUM2 = NUM2 + 1
           d("cached", NUM2, {

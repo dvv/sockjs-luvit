@@ -10,12 +10,14 @@ return function(routes)
     end
     req.uri.query = String.parse_query(req.uri.query)
     local str = req.method .. ' ' .. req.uri.pathname
-    for route, handler in pairs(routes) do
+    local _list_0 = routes
+    for _index_0 = 1, #_list_0 do
+      local pair = _list_0[_index_0]
       local params = {
-        String.match(str, route)
+        String.match(str, pair[1])
       }
-      if params[1] ~= nil then
-        handler(res, nxt, unpack(params))
+      if params[1] then
+        pair[2](res, nxt, unpack(params))
         return 
       end
     end
