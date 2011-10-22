@@ -116,7 +116,7 @@ Session = (function()
       self.close_frame = Transport.closing_frame(status, reason)
       if self.recv then
         self.recv:send_frame(self.close_frame)
-        self:unbind()
+        self.recv:finish()
       end
       return 
     end,

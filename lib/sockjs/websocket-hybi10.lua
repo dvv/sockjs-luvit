@@ -19,6 +19,7 @@ do
   lshift = _table_0.lshift
 end
 local slice = String.sub
+local char = String.char
 local byte = String.byte
 local push = Table.insert
 local join = Table.concat
@@ -35,6 +36,14 @@ end
 local rand256
 rand256 = function()
   return floor(random() * 256)
+end
+local table_to_string
+table_to_string = function(tbl)
+  local s = ''
+  for i = 1, #tbl do
+    s = s .. char(tbl[i])
+  end
+  return s
 end
 return function(self, origin, location, cb)
   p('SHAKE8', origin, location)
@@ -124,7 +133,7 @@ return function(self, origin, location, cb)
       for i = 1, length do
         push(tbl, bxor(byte(payload, i), key[(i - 1) % 4 + 1]))
       end
-      payload = String.char(unpack(tbl))
+      payload = table_to_string(tbl)
     end
     p('PAYLOAD!', payload, #payload, tbl, #tbl)
     data = slice(buf, l + length + 1)
@@ -194,7 +203,7 @@ return function(self, origin, location, cb)
     for i = 1, pl do
       push(a, bxor(byte(payload, i), key[(i - 1) % 4 + 1]))
     end
-    a = String.char(unpack(a))
+    a = table_to_string(a)
     p('WRITE', a, a:tohex())
     return self:write(a)
   end

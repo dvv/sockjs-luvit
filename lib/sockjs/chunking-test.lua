@@ -26,6 +26,10 @@ return {
       self:send(200, nil, {
         ['Content-Type'] = 'application/javascript; charset=UTF-8'
       }, false)
+      self:on('error', function(err)
+        p('CHUNKERRORRES', err)
+        return self:finish()
+      end)
       self:write('h\n')
       for k, delay in ipairs({
         1,

@@ -19,8 +19,10 @@ Response.prototype.handle_balancer_cookie = function(self)
 end
 Response.prototype.write_frame = function(self, payload)
   self.curr_size = self.curr_size + #payload
+  p('ONWIRE', payload)
   self:write(payload)
   if self.max_size and self.curr_size >= self.max_size then
+    p('MAXSIZE EXCEEDED, CLOSING')
     self:finish()
   end
   return 

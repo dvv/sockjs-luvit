@@ -48,7 +48,6 @@ return function(root, options)
   end
   return function(req, res, nxt)
     res.get_options = function(self, root)
-      p('ROOT', root)
       return servers[root]
     end
     res.get_session = function(self, sid, options)

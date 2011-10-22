@@ -66,15 +66,14 @@ handler = function(self, nxt, root, sid, transport)
         return self:fail('Payload expected.')
       end
     end
-    local status
-    status, data = pcall(decode, data)
+    local status, messages = pcall(decode, data)
     if not status then
       return self:fail('Broken JSON encoding.')
     end
-    if not is_array(data) then
+    if not is_array(messages) then
       return self:fail('Payload expected.')
     end
-    local _list_0 = data
+    local _list_0 = messages
     for _index_0 = 1, #_list_0 do
       local message = _list_0[_index_0]
       session:onmessage(message)
