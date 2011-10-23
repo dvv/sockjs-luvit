@@ -1,13 +1,13 @@
-require('./lib/util')
-local Stack = require('./lib/stack')
-local SockJS = require('./lib/sockjs')
+local Server = require('server')
+local SockJS = require('sockjs-luvit-1')
 
+local String = require('string')
 local Math = require('math')
 
 local http_stack_layers
 http_stack_layers = function()
   return {
-    Stack.use('route')({
+    Server.use('route')({
       {
         'GET /$',
         function(self, nxt)
@@ -15,13 +15,13 @@ http_stack_layers = function()
         end
       }
     }),
-    Stack.use('static')('/public/', 'public/', { }),
-    SockJS()
+    SockJS(),
+    Server.use('static')('/', 'public/', { }),
   }
 end
 
 SockJS('/echo', {
-  sockjs_url = '/public/sockjs.js',
+  sockjs_url = '/sockjs.js',
   onconnection = function(conn)
     p('CONNE', conn.sid, conn.id)
     return conn:on('message', function(m)
@@ -31,7 +31,7 @@ SockJS('/echo', {
 })
 
 SockJS('/close', {
-  sockjs_url = '/public/sockjs.js',
+  sockjs_url = '/sockjs.js',
   onconnection = function(conn)
     p('CONNC', conn.sid, conn.id)
     return conn:close(3000, 'Go away!')
@@ -39,7 +39,7 @@ SockJS('/close', {
 })
 
 SockJS('/amplify', {
-  sockjs_url = '/public/sockjs.js',
+  sockjs_url = '/sockjs.js',
   onconnection = function(conn)
     p('CONNA', conn.sid, conn.id)
     conn:on('message', function(m)
@@ -56,6 +56,6 @@ SockJS('/amplify', {
   end
 })
 
-local s1 = Stack(http_stack_layers()):run(8080)
+local s1 = Server.run(http_stack_layers(), 8080)
 print('Server listening at http://localhost:8080/')
 require('repl')
