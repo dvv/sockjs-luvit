@@ -24,8 +24,8 @@ build/lua-cjson:
 crypto: build/lua-openssl/openssl.so
 
 build/lua-openssl/openssl.so: build/lua-openssl
-	sed -i 's,$$(CC) -c -o $$@ $$?,$$(CC) -c -I$(ROOT)/build/luvit/deps/luajit/src -o $$@ $$?,' build/lua-openssl/makefile
-	make -C $^
+	#sed -i 's,$$(CC) -c -o $$@ $$?,$$(CC) -c -I$(ROOT)/build/luvit/deps/luajit/src -o $$@ $$?,' build/lua-openssl/makefile
+	make INCS=-I$(ROOT)/build/luvit/deps/luajit/src -C $^
 
 build/lua-openssl:
 	wget http://github.com/zhaozg/lua-openssl/tarball/master -O - | tar -xzpf - -C build
