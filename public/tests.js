@@ -4,11 +4,11 @@
   protocols = ['websocket'];
   protocols = ['xhr-streaming'];
   protocols = ['iframe-eventsource'];
-  protocols = ['iframe-htmlfile'];
-  protocols = ['xhr-polling'];
-  protocols = ['iframe-xhr-polling'];
-  protocols = ['jsonp-polling'];
-  protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
+  //protocols = ['iframe-htmlfile'];
+  //protocols = ['xhr-polling'];
+  //protocols = ['iframe-xhr-polling'];
+  //protocols = ['jsonp-polling'];
+  //protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
 
   newSockJS = function(path, protocol) {
     var url;
@@ -326,7 +326,7 @@
 
   module('other');
 
-  test("amending url", function() {
+  /*test("amending url", function() {
     var dl, r, t;
     dl = document.location;
     r = new SockJS('//blah:1/abc', []);
@@ -464,6 +464,6 @@
   for (_j = 0, _len2 = protocols.length; _j < _len2; _j++) {
     protocol = protocols[_j];
     test_protocol_errors(protocol);
-  }
+  }*/
 
 }).call(this);

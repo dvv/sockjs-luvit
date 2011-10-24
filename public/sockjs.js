@@ -1491,6 +1491,9 @@ var EventSourceReceiver = function(url) {
         // on network error it's CLOSED = 2
         var reason = abort_reason ? 'user' :
             (es.readyState !== 2 ? 'network' : 'permanent');
+if (reason === 'permanent') {
+  console.error('EVENTSOURCE', es, es.readyState, e);
+}
         that.es_close = es.onmessage = es.onerror = null;
         // EventSource reconnects automatically.
         es.close();
@@ -1607,7 +1610,7 @@ var XhrReceiver = function(url, opts) {
             }
         }
         if (xhr.readyState === 4 || abort_reason) {
-            var reason = abort_reason ? 'user' :
+            var reason = (abort_reason || xhr.status === 0) ? 'user' :
                 (xhr.status === 200 ? 'network' : 'permanent');
             that.xhr_close = null;
             that.dispatchEvent(new SimpleEvent('close', {reason: reason}));
