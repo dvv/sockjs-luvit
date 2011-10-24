@@ -24,22 +24,14 @@ Response.prototype.handle_balancer_cookie = () =>
 --
 -- write a frame, honoring max_size set for this request
 --
-Response.prototype.write_frame = (payload) =>
-  @curr_size = @curr_size + #payload
-  p('ONWIRE', payload)
-  @write payload
-  if @max_size and @curr_size >= @max_size
-    p('MAXSIZE EXCEEDED, CLOSING')
-    --set_timeout 100, () -> @finish()
-    @finish()
-  return
-
-Response.prototype.write_frame2 = (payload) =>
-  @curr_size = @curr_size + #payload
-  @write payload, () ->
+Response.prototype.write_frame = (payload, continue) =>
+  @curr_size = @curr_size + #payload if @max_size
+  debug('WRITE_FRAME', #payload < 128 and payload or #payload)
+  @write payload, (err) ->
     if @max_size and @curr_size >= @max_size
-      --set_timeout 100, () -> @finish()
-      @finish()
+      debug('MAXSIZE EXCEEDED, CLOSING', err)
+      @finish () ->
+        continue err if continue
     return
   return
 

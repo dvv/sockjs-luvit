@@ -96,7 +96,8 @@ return (mount, root, options = {}) ->
     -- serve from cache, if available
     --d("serve", headers)
     if file.data
-      @safe_write range and file.data.sub(start + 1, stop - start + 1) or file.data, (...) ->
+      -- FIXME: safe
+      @write range and file.data.sub(start + 1, stop - start + 1) or file.data, (...) ->
       --d('write', ...)
         @finish()
     -- otherwise stream and possibly cache
@@ -109,7 +110,8 @@ return (mount, root, options = {}) ->
         if cache_it
           parts[index] = chunk
           index = index + 1
-        @safe_write(chunk, cb)
+        -- FIXME: safe
+        @write(chunk, cb)
       -- eof
       eof = (err) ->
         @finish()

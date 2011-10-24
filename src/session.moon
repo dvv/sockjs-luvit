@@ -81,7 +81,7 @@ class Session extends EventEmitter
       @unbind()
     @recv\once 'error', (err) ->
       p('ERROR', err)
-      error(err)
+      --error(err)
       @recv\finish()
     -- send the open frame
     if @readyState == Transport.CONNECTING
@@ -135,7 +135,7 @@ class Session extends EventEmitter
 
   onmessage: (payload) =>
     if @readyState == Transport.OPEN
-      p('MESSAGE', payload)
+      p('MESSAGE', #payload < 128 and payload or #payload)
       @emit 'message', payload
     return
 
@@ -143,15 +143,17 @@ class Session extends EventEmitter
     return false if @readyState != Transport.OPEN
     -- TODO: booleans won't get stringified by concat
     Table.insert @send_buffer, type(payload) == 'table' and Table.concat(payload, ',') or tostring(payload)
-    @flush() if @recv
+    if @recv
+      set_timeout 0, () -> @flush()
     true
 
   flush: =>
-    p('INFLUSH', @send_buffer)
+    p('INFLUSH', #@send_buffer)
     if #@send_buffer > 0
       messages = @send_buffer
       @send_buffer = {}
-      @recv\send_frame 'a' .. encode(messages)
+      @recv\send_frame 'a' .. encode(messages), (err) ->
+        debug('SENT_FRAME', err)
     else
       p('TOTREF?', @TO, @to_tref)
       [==[

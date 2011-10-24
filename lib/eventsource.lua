@@ -40,7 +40,6 @@ handler = function(self, nxt, root, sid)
   self.protocol = 'eventsource'
   self.curr_size, self.max_size = 0, options.response_limit
   self.send_frame = function(self, payload)
-    p('SEND', payload)
     return self:write_frame('data: ' .. payload .. '\r\n\r\n')
   end
   local session = self:get_session(sid, options)

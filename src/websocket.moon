@@ -55,7 +55,7 @@ handler = (nxt, verb, root) =>
   -- register session
   session = @get_session nil, options
   ver = @req.headers['sec-websocket-version']
-  shaker = if ver == '8' or ver == '7' then hybi10 else hixie76
+  shaker = if ver == '8' or ver == '7' or ver == '13' then hybi10 else hixie76
   shaker self, origin, location, () -> session\bind self
   return
 

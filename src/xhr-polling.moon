@@ -13,8 +13,8 @@ handler = (nxt, root, sid) =>
   -- upgrade response to session handler
   @protocol = 'xhr'
   @curr_size, @max_size = 0, 1
-  @send_frame = (payload) =>
-    @write_frame(payload .. '\n')
+  @send_frame = (payload, continue) =>
+    @write_frame(payload .. '\n', continue)
   -- register session
   session = @get_session sid, options
   session\bind self

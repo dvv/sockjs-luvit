@@ -72,7 +72,6 @@ Session = (function()
       end)
       self.recv:once('error', function(err)
         p('ERROR', err)
-        error(err)
         return self.recv:finish()
       end)
       if self.readyState == Transport.CONNECTING then
@@ -143,7 +142,7 @@ Session = (function()
     end,
     onmessage = function(self, payload)
       if self.readyState == Transport.OPEN then
-        p('MESSAGE', payload)
+        p('MESSAGE', #payload < 128 and payload or #payload)
         self:emit('message', payload)
       end
       return 
@@ -154,16 +153,20 @@ Session = (function()
       end
       Table.insert(self.send_buffer, type(payload) == 'table' and Table.concat(payload, ',') or tostring(payload))
       if self.recv then
-        self:flush()
+        set_timeout(0, function()
+          return self:flush()
+        end)
       end
       return true
     end,
     flush = function(self)
-      p('INFLUSH', self.send_buffer)
+      p('INFLUSH', #self.send_buffer)
       if #self.send_buffer > 0 then
         local messages = self.send_buffer
         self.send_buffer = { }
-        self.recv:send_frame('a' .. encode(messages))
+        self.recv:send_frame('a' .. encode(messages), function(err)
+          return debug('SENT_FRAME', err)
+        end)
       else
         p('TOTREF?', self.TO, self.to_tref)
         local _ = [==[      if @to_tref

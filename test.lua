@@ -56,6 +56,6 @@ SockJS('/amplify', {
   end
 })
 
-local s1 = Server.run(http_stack_layers(), 8080)
+local s1 = Server.run(http_stack_layers(), 8080, '0.0.0.0')
 print('Server listening at http://localhost:8080/')
 require('repl')

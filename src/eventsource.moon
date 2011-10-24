@@ -36,7 +36,6 @@ handler = (nxt, root, sid) =>
   @protocol = 'eventsource'
   @curr_size, @max_size = 0, options.response_limit
   @send_frame = (payload) =>
-    p('SEND', payload)
     @write_frame('data: ' .. payload .. '\r\n\r\n')
   -- register session
   session = @get_session sid, options

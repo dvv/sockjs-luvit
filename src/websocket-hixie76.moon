@@ -86,11 +86,6 @@ return (origin, location, cb) =>
         @write reply
         cb() if cb
     return
-  @send_frame = (payload) =>
-    p('SEND', payload)
-    -- N.B. plain write(), not write_frame(), not not account for max_size
-    @write '\000' .. payload .. '\255'
-    -- N.B. trade speed for memory usage
-    [==[@write '\000'
-    @write payload
-    @write '\255']==]
+  @send_frame = (payload, continue) =>
+    @write_frame '\000' .. payload .. '\255', continue
+    return

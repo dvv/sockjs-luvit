@@ -12,8 +12,8 @@ handler = function(self, nxt, root, sid)
   }, false)
   self.protocol = 'xhr'
   self.curr_size, self.max_size = 0, 1
-  self.send_frame = function(self, payload)
-    return self:write_frame(payload .. '\n')
+  self.send_frame = function(self, payload, continue)
+    return self:write_frame(payload .. '\n', continue)
   end
   local session = self:get_session(sid, options)
   session:bind(self)

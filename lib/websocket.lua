@@ -58,7 +58,7 @@ handler = function(self, nxt, verb, root)
   local session = self:get_session(nil, options)
   local ver = self.req.headers['sec-websocket-version']
   local shaker
-  if ver == '8' or ver == '7' then
+  if ver == '8' or ver == '7' or ver == '13' then
     shaker = hybi10
   else
     shaker = hixie76

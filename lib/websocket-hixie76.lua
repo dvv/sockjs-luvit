@@ -120,11 +120,8 @@ return function(self, origin, location, cb)
     end
     return 
   end)
-  self.send_frame = function(self, payload)
-    p('SEND', payload)
-    self:write('\000' .. payload .. '\255')
-    return [==[@write '\000'
-    @write payload
-    @write '\255']==]
+  self.send_frame = function(self, payload, continue)
+    self:write_frame('\000' .. payload .. '\255', continue)
+    return 
   end
 end

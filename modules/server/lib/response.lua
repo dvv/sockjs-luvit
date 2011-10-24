@@ -3,7 +3,7 @@ local FS = require('fs')
 local noop
 noop = function() end
 Response.prototype.auto_server = 'U-Gotta-Luvit'
-Response.prototype.safe_write = function(self, chunk, cb)
+Response.prototype.safe_write0 = function(self, chunk, cb)
   if cb == nil then
     cb = noop
   end
@@ -11,13 +11,45 @@ Response.prototype.safe_write = function(self, chunk, cb)
     if not err then
       return cb(err, result)
     end
-    if err == 16 then
-      return self:safe_write(chunk, cb)
+    if err then
+      p('WRITERR?', err, result)
+      if err.code == 'EBUSY' or err.code == 'EINTR' then
+        return self:safe_write(chunk, cb)
+      end
     else
       p('WRITE FAILED', err)
       return cb(err)
     end
   end)
+end
+local CHUNK = 4096
+Response.prototype.safe_write = function(self, data, cb)
+  local buf = data
+  local _write
+  _write = function()
+    if buf == '' and cb then
+      return cb()
+    end
+    local s = buf:sub(1, CHUNK)
+    return self:write(s, function(err, result)
+      p('WRITTEN', self.chunked, #s)
+      if not err then
+        buf = buf:sub(CHUNK + 1)
+      else
+        if err.code ~= 'EBUSY' and err.code ~= 'EINTR' then
+          p('SAFE_WRITE FAILED', err)
+          if cb then
+            cb(err)
+          end
+          return 
+        end
+      end
+      _write()
+      return 
+    end)
+  end
+  _write()
+  return 
 end
 Response.prototype.send = function(self, code, data, headers, close)
   if close == nil then

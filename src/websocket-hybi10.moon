@@ -43,7 +43,7 @@ return (origin, location, cb) =>
   -- parse incoming data
   data = ''
   ondata = (chunk) ->
-    p('DATA', chunk, chunk and #chunk, chunk and chunk\tohex())
+    --p('DATA', chunk, chunk and #chunk, chunk and chunk\tohex())
     if chunk
       data = data .. chunk
     -- TODO: support length in framing
@@ -96,19 +96,21 @@ return (origin, location, cb) =>
     if #buf < l + length
       return
     payload = slice buf, l + 1, l + length
-    p('PAYLOAD?', payload, #payload, payload\tohex(), length)
+    p('PAYLOAD', #payload)
+    --p('PAYLOAD?', payload, #payload, payload\tohex(), length)
     tbl = {}
     if masking
       for i = 1, length
         push tbl, bxor(byte(payload, i), key[(i - 1) % 4 + 1])
       payload = table_to_string tbl
-    p('PAYLOAD!', payload, #payload, tbl, #tbl)
+    --p('PAYLOAD!', payload, #payload, tbl, #tbl)
     data = slice buf, l + length + 1
     p('ok', masking, length)
     if opcode == 1
       if @session and #payload > 0
         status, message = pcall decode, payload
-        p('DECODE', payload, status, message)
+        --p('DECODE', payload, status, message)
+        p('DECODE', status, message)
         return @do_reasoned_close(1002, 'Broken framing.') if not status
         -- process message
         @session\onmessage message
@@ -126,26 +128,28 @@ return (origin, location, cb) =>
       @do_reasoned_close status, reason
     return
   @req\on 'data', ondata
-  @send_frame = (payload) =>
-    p('SEND', payload)
+  @send_frame = (payload, continue) =>
+    --p('SEND', payload)
     pl = #payload
     a = {}
     push a, 128 + 1
-    push a, 0x80 -- N.B. masking 0x80?
+    push a, 0x80 -- N.B. masking 0x80
     if pl < 126
       a[2] = bor a[2], pl
     else if pl < 65536
       a[2] = bor a[2], 126
       push a, rshift(pl, 8) % 256
       push a, pl % 256
-    [==[
     else
+      for i = 1, 8
+        push a, true
       pl2 = pl
       a[2] = bor a[2], 127
-      for i in 7, -1, -1
-        a[l+i] = pl2 % 256
+      for i = 10, 3, -1
+        a[i] = pl2 % 256
         pl2 = rshift pl2, 8
-    ]==]
+      --p('LENGTHY', a)
+      --error('LENGHTY')
     key = {rand256(), rand256(), rand256(), rand256()}
     push a, key[1]
     push a, key[2]
@@ -153,8 +157,7 @@ return (origin, location, cb) =>
     push a, key[4]
     for i = 1, pl
       push a, bxor(byte(payload, i), key[(i - 1) % 4 + 1])
-    -- N.B. plain write(), not write_frame(), not not account for max_size
     a = table_to_string a
-    p('WRITE', a, a\tohex())
-    @write a
+    @write_frame a, continue
+    return
   cb() if cb

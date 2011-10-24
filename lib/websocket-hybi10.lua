@@ -58,7 +58,6 @@ return function(self, origin, location, cb)
   local data = ''
   local ondata
   ondata = function(chunk)
-    p('DATA', chunk, chunk and #chunk, chunk and chunk:tohex())
     if chunk then
       data = data .. chunk
     end
@@ -129,7 +128,7 @@ return function(self, origin, location, cb)
       return 
     end
     local payload = slice(buf, l + 1, l + length)
-    p('PAYLOAD?', payload, #payload, payload:tohex(), length)
+    p('PAYLOAD', #payload)
     local tbl = { }
     if masking then
       for i = 1, length do
@@ -137,14 +136,13 @@ return function(self, origin, location, cb)
       end
       payload = table_to_string(tbl)
     end
-    p('PAYLOAD!', payload, #payload, tbl, #tbl)
     data = slice(buf, l + length + 1)
     p('ok', masking, length)
     if opcode == 1 then
       if self.session and #payload > 0 then
         local message
         status, message = pcall(decode, payload)
-        p('DECODE', payload, status, message)
+        p('DECODE', status, message)
         if not status then
           return self:do_reasoned_close(1002, 'Broken framing.')
         end
@@ -170,8 +168,7 @@ return function(self, origin, location, cb)
     return 
   end
   self.req:on('data', ondata)
-  self.send_frame = function(self, payload)
-    p('SEND', payload)
+  self.send_frame = function(self, payload, continue)
     local pl = #payload
     local a = { }
     push(a, 128 + 1)
@@ -183,15 +180,18 @@ return function(self, origin, location, cb)
         a[2] = bor(a[2], 126)
         push(a, rshift(pl, 8) % 256)
         push(a, pl % 256)
+      else
+        for i = 1, 8 do
+          push(a, true)
+        end
+        local pl2 = pl
+        a[2] = bor(a[2], 127)
+        for i = 10, 3, -1 do
+          a[i] = pl2 % 256
+          pl2 = rshift(pl2, 8)
+        end
       end
     end
-    local _ = [==[    else
-      pl2 = pl
-      a[2] = bor a[2], 127
-      for i in 7, -1, -1
-        a[l+i] = pl2 % 256
-        pl2 = rshift pl2, 8
-    ]==]
     local key = {
       rand256(),
       rand256(),
@@ -206,8 +206,8 @@ return function(self, origin, location, cb)
       push(a, bxor(byte(payload, i), key[(i - 1) % 4 + 1]))
     end
     a = table_to_string(a)
-    p('WRITE', a, a:tohex())
-    return self:write(a)
+    self:write_frame(a, continue)
+    return 
   end
   if cb then
     return cb()

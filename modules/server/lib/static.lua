@@ -99,7 +99,7 @@ return function(mount, root, options)
       self:write_head(200, headers)
     end
     if file.data then
-      return self:safe_write(range and file.data.sub(start + 1, stop - start + 1) or file.data, function(...)
+      return self:write(range and file.data.sub(start + 1, stop - start + 1) or file.data, function(...)
         return self:finish()
       end)
     else
@@ -113,7 +113,7 @@ return function(mount, root, options)
           parts[index] = chunk
           index = index + 1
         end
-        return self:safe_write(chunk, cb)
+        return self:write(chunk, cb)
       end
       local eof
       eof = function(err)
