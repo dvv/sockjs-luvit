@@ -5,17 +5,13 @@
 import get_digest from require 'server/modules/crypto'
 import floor, random from require 'math'
 import band, bor, bxor, rshift, lshift from require 'bit'
-String = require 'string'
-slice = String.sub
-char = String.char
-byte = String.byte
+import sub, gsub, match, byte, char, base64 from require 'string'
 Table = require 'table'
 push = Table.insert
-join = Table.concat
 import encode, decode from JSON
 
 verify_secret = (key) ->
-  data = (String.match(key, '(%S+)')) .. '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+  data = (match(key, '(%S+)')) .. '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
   dg = get_digest('sha1')\init()
   dg\update data
   r = dg\final()
@@ -32,18 +28,18 @@ table_to_string = (tbl) ->
   s
 
 return (origin, location, cb) =>
-  p('SHAKE8', origin, location)
+  protocol = @req.headers['sec-websocket-protocol']
+  protocol = (match protocol, '[^,]*') if protocol
   @write_head 101, {
     ['Upgrade']: 'WebSocket'
     ['Connection']: 'Upgrade'
-    ['Sec-WebSocket-Accept']: String.base64(verify_secret(@req.headers['sec-websocket-key']))
-    --TODO['Sec-WebSocket-Protocol']: @req.headers['sec-websocket-protocol'].split('[^,]*')
+    ['Sec-WebSocket-Accept']: base64(verify_secret(@req.headers['sec-websocket-key']))
+    ['Sec-WebSocket-Protocol']: protocol
   }
   @has_body = true -- override bodyless assumption on 101
   -- parse incoming data
   data = ''
   ondata = (chunk) ->
-    --p('DATA', chunk, chunk and #chunk, chunk and chunk\tohex())
     if chunk
       data = data .. chunk
     -- TODO: support length in framing
@@ -58,7 +54,6 @@ return (origin, location, cb) =>
       @do_reasoned_close 1002, 'Fin flag not set'
       return
     opcode = band byte(buf, 1), 0x0F
-    p('OPCODE', opcode)
     if opcode != 1 and opcode != 8
       error('not a text nor close frame', opcode)
       @do_reasoned_close 1002, 'not a text nor close frame'
@@ -71,8 +66,6 @@ return (origin, location, cb) =>
     length = 0
     key = {}
     masking = band(byte(buf, 2), 0x80) != 0
-    p('MASKING', masking)
-    p('FIRST', first)
     if first < 126
       length = first
       l = 2
@@ -95,22 +88,17 @@ return (origin, location, cb) =>
       l = l + 4
     if #buf < l + length
       return
-    payload = slice buf, l + 1, l + length
-    p('PAYLOAD', #payload)
-    --p('PAYLOAD?', payload, #payload, payload\tohex(), length)
+    payload = sub buf, l + 1, l + length
     tbl = {}
     if masking
       for i = 1, length
         push tbl, bxor(byte(payload, i), key[(i - 1) % 4 + 1])
       payload = table_to_string tbl
-    --p('PAYLOAD!', payload, #payload, tbl, #tbl)
-    data = slice buf, l + length + 1
-    p('ok', masking, length)
+    data = sub buf, l + length + 1
     if opcode == 1
       if @session and #payload > 0
         status, message = pcall decode, payload
-        --p('DECODE', payload, status, message)
-        p('DECODE', status, message)
+        --d('DECODE', status, message)
         return @do_reasoned_close(1002, 'Broken framing.') if not status
         -- process message
         @session\onmessage message
@@ -122,14 +110,13 @@ return (origin, location, cb) =>
       else
         status = 1002
       if #payload > 2
-        reason = slice payload, 3
+        reason = sub payload, 3
       else
         reason = 'Connection closed by user'
       @do_reasoned_close status, reason
     return
   @req\on 'data', ondata
   @send_frame = (payload, continue) =>
-    --p('SEND', payload)
     pl = #payload
     a = {}
     push a, 128 + 1
@@ -148,8 +135,6 @@ return (origin, location, cb) =>
       for i = 10, 3, -1
         a[i] = pl2 % 256
         pl2 = rshift pl2, 8
-      --p('LENGTHY', a)
-      --error('LENGHTY')
     key = {rand256(), rand256(), rand256(), rand256()}
     push a, key[1]
     push a, key[2]

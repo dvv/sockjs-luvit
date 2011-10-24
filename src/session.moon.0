@@ -9,6 +9,18 @@ import encode, decode from JSON
 Table = require 'table'
 
 --
+-- Transport abstraction
+--
+Transport = {
+  CONNECTING: 0
+  OPEN: 1
+  CLOSING: 2
+  CLOSED: 3
+  closing_frame: (status, reason) ->
+    'c' .. encode({status, reason})
+}
+
+--
 -- Session -- bidirectional WebSocket-like channel between client and server
 --
 
@@ -19,26 +31,16 @@ sessions = {}
 
 -- TODO: get rid in production
 _G.s = () -> sessions
+_G.f = () -> sessions = {}
 
 class Session extends EventEmitter
 
-  -- session status constants
-  CONNECTING: 0
-  OPEN: 1
-  CLOSING: 2
-  CLOSED: 3
-
-  -- given session id return session, if any
   get: (sid) -> sessions[sid]
 
-  -- given session id, return existing, or create new session, with options
   get_or_create: (sid, options) ->
     session = Session.get sid
     session = Session(sid, options) if not session
     session
-
-  -- compose closing frame
-  closing_frame: (status, reason) -> 'c' .. encode({status, reason})
 
   --
   -- create new session
@@ -55,7 +57,7 @@ class Session extends EventEmitter
     -- allocate buffer for outgoing messages
     @send_buffer = {}
     -- put this session in collection of sessions
-    @ready_state = Session.CONNECTING
+    @ready_state = Transport.CONNECTING
     sessions[@sid] = self if @sid
 
     -- setup inactivity timeout
@@ -65,51 +67,57 @@ class Session extends EventEmitter
     @emit_connection_event = ->
       @emit_connection_event = nil
       options.onconnection self
+    -- DEBUG
+    _G.l = self
 
   --
   -- bind a connection to this session
   --
 
   bind: (conn) =>
-    --d('BIND', @sid, @id)
+    p('BIND', @sid, @id)
 
     -- can't bind more than one connection
     if @conn
-      conn\send_frame Session.closing_frame(2010, 'Another connection still open')
+      conn\send_frame Transport.closing_frame(2010, 'Another connection still open')
       return
 
     -- closing session rejects bindings
-    if @ready_state == Session.CLOSING
+    if @ready_state == Transport.CLOSING
+      p('STATEISCLOSING', @close_frame)
       conn\send_frame @close_frame
       if @to_tref
         clear_timer @to_tref
       @to_tref = set_timeout @disconnect_delay, @ontimeout, self
       return
-
+    --
+    p('DOREGISTER', @ready_state)
     -- bind connection
     @conn = conn
     conn.session = self
     -- when connection ends, unbind it
     conn\once 'closed', () ->
-      --d('CLOSEDEVENT')
+      p('CLOSEDEVENT')
       @unbind()
     conn\once 'end', () ->
-      --d('END')
+      p('END')
       @unbind()
     conn\once 'error', (err) ->
-      --d('ERROR', err)
+      p('ERROR', err)
       --error(err)
       conn\finish()
 
-    -- send the opening frame
-    if @ready_state == Session.CONNECTING
-      @conn\send_frame 'o'
+    -- send the open frame
+    if @ready_state == Transport.CONNECTING
+      @conn\send_frame 'o', (err) ->
+        p('SENT_O', err)
       -- and mark this session as open
-      @ready_state = Session.OPEN
+      @ready_state = Transport.OPEN
       -- emit connection event asynchronously
-      set_timeout 0, @emit_connection_event
+      --set_timeout 0, () ->
+      @emit_connection_event()
 
-    -- reset inactivity timeout
+    -- reset incativity timeout
     if @to_tref
       clear_timer @to_tref
       @to_tref = nil
@@ -119,142 +127,82 @@ class Session extends EventEmitter
 
     return
 
-  --
-  -- unbind connection bound to this session
-  --
-
   unbind: =>
-    --d('UNREGISTER', @sid, @id, not not @conn)
-
-    -- cleanup
+    p('UNREGISTER', @sid, @id, not not @conn)
     if @conn
       @conn.session = nil
       @conn = nil
     if @to_tref
       clear_timer @to_tref
-
-    -- shedule disconnect event
     @to_tref = set_timeout @disconnect_delay, @ontimeout, self
-
+    @TO = 'TIMEOUTINUNREGISTER'
     return
 
-  --
-  -- timeout expired, close the session
-  --
-
   ontimeout: =>
-    --p('TIMEDOUT', @sid, @conn)
-
-    -- cleanup
+    p('TIMEDOUT', @sid, @conn)
     if @to_tref
       clear_timer @to_tref
       @to_tref = nil
-
-    -- can't close closed session
-    if @ready_state != Session.CONNECTING and @ready_state != Session.OPEN and @ready_state != Session.CLOSING
+    if @ready_state != Transport.CONNECTING and @ready_state != Transport.OPEN and @ready_state != Transport.CLOSING
       error 'INVALID_STATE_ERR'
-
-    -- can't close while connection is bound
     if @conn
       error 'RECV_STILL_THERE'
-
-    -- mark this session as closed
-    @ready_state = Session.CLOSED
+    @ready_state = Transport.CLOSED
     @emit 'close'
-
-    -- remove this session from collection of sessions
     if @sid
       sessions[@sid] = nil
       @sid = nil
-
     return
-
-  --
-  -- process incoming message
-  --
 
   onmessage: (payload) =>
-    --p('MESSAGE', #payload < 128 and payload or #payload)
-
-    -- trigger event handlers if this session is open
-    if @ready_state == Session.OPEN
+    p('<MESSAGE', payload)
+    if @ready_state == Transport.OPEN
+      p('MESSAGE', #payload < 128 and payload or #payload)
       @emit 'message', payload
-
     return
 
-  --
-  -- try to flush outgoing messages queue
-  --
-
   flush: =>
-
-    -- there are messages in queue
+    --p('INFLUSH', #@send_buffer)
     if #@send_buffer > 0
-
-      -- send them as encoded array, and empty the queue
       messages = @send_buffer
       @send_buffer = {}
-      @conn\send_frame 'a' .. encode(messages)
-
-    -- queue is empty
+      @conn\send_frame 'a' .. encode(messages), (err) ->
+        debug('SENT_FRAME', err)
     else
-
-      -- shedule heartbeat
-      if @to_tref
+      p('TOTREF?', @TO, @to_tref)
+      [==[if @to_tref
         clear_timer @to_tref
         @to_tref = nil
-
       heartbeat = ->
+        p('INHEART', not not @conn)
         if @conn
           @conn\send_frame 'h'
           @to_tref = set_timeout @heartbeat_delay, heartbeat
+          @TO = 'TIMEOUTINHEARTX'
         else
           @to_tref = nil
-
+          @TO = 'TIMEOUTINHEARTDOWNED'
       @to_tref = set_timeout @heartbeat_delay, heartbeat
-
+      @TO = 'TIMEOUTINHEART0'
+      ]==]
     return
-
-  --
-  -- orderly close this session
-  --
 
   close: (status = 1000, reason = 'Normal closure') =>
-
-    -- can't close not opened session
-    return false if @ready_state != Session.OPEN
-
-    -- mark as closing
-    @ready_state = Session.CLOSING
-    -- compose closing frame
-    @close_frame = Session.closing_frame status, reason
-    -- if connection is bound, use it to send the closing frame
+    return false if @ready_state != Transport.OPEN
+    @ready_state = Transport.CLOSING
+    @close_frame = Transport.closing_frame status, reason
     if @conn
-      @conn\send_frame @close_frame, () -> @conn\finish()
-      --@conn\send_frame @close_frame
-      --@conn\finish()
-
+      --@conn\send_frame @close_frame, () -> @conn\finish()
+      @conn\send_frame @close_frame
+      @conn\finish()
     return
 
-  --
-  -- send data to the remote end
-  -- N.B. we always buffer outgoing messages
-  --
-
   send: (payload) =>
-
-    -- can't send if session is not opened
-    return false if @ready_state != Session.OPEN
-
-    -- stringify payload
+    return false if @ready_state != Transport.OPEN
     -- TODO: booleans won't get stringified by concat
-    -- enqueue message
     Table.insert @send_buffer, type(payload) == 'table' and Table.concat(payload, ',') or tostring(payload)
-    -- if connection is bound, try to flush the queue
     if @conn
       set_timeout 0, () -> @flush()
-
     true
 
--- export
 return Session

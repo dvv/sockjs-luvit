@@ -18,12 +18,15 @@ do
   rshift = _table_0.rshift
   lshift = _table_0.lshift
 end
-local String = require('string')
-local slice = String.sub
-local byte = String.byte
-local Table = require('table')
-local push = Table.insert
-local join = Table.concat
+local sub, gsub, match, byte, char
+do
+  local _table_0 = require('string')
+  sub = _table_0.sub
+  gsub = _table_0.gsub
+  match = _table_0.match
+  byte = _table_0.byte
+  char = _table_0.char
+end
 local encode, decode = JSON.encode, JSON.decode
 local validate_secret
 validate_secret = function(req_headers, nonce)
@@ -39,13 +42,13 @@ validate_secret = function(req_headers, nonce)
   }
   for _index_0 = 1, #_list_0 do
     local k = _list_0[_index_0]
-    local n = tonumber((String.gsub(k, '[^%d]', '')), 10)
-    local spaces = #(String.gsub(k, '[^ ]', ''))
+    local n = tonumber((gsub(k, '[^%d]', '')), 10)
+    local spaces = #(gsub(k, '[^ ]', ''))
     if spaces == 0 or n % spaces ~= 0 then
       return false
     end
     n = n / spaces
-    dg:update(String.char(rshift(n, 24) % 256, rshift(n, 16) % 256, rshift(n, 8) % 256, n % 256))
+    dg:update(char(rshift(n, 24) % 256, rshift(n, 16) % 256, rshift(n, 8) % 256, n % 256))
   end
   dg:update(nonce)
   local r = dg:final()
@@ -53,14 +56,18 @@ validate_secret = function(req_headers, nonce)
   return r
 end
 return function(self, origin, location, cb)
-  p('SHAKE76', origin, location)
   self.sec = self.req.headers['sec-websocket-key1']
   local prefix = self.sec and 'Sec-' or ''
+  local protocol = self.req.headers['sec-websocket-protocol']
+  if protocol then
+    protocol = (match(protocol, '[^,]*'))
+  end
   self:write_head(101, {
     ['Upgrade'] = 'WebSocket',
     ['Connection'] = 'Upgrade',
     [prefix .. 'WebSocket-Origin'] = origin,
-    [prefix .. 'WebSocket-Location'] = location
+    [prefix .. 'WebSocket-Location'] = location,
+    ['Sec-WebSocket-Protocol'] = protocol
   })
   self.has_body = true
   local data = ''
@@ -73,14 +80,13 @@ return function(self, origin, location, cb)
     if #buf == 0 then
       return 
     end
-    if String.byte(buf, 1) == 0 then
+    if byte(buf, 1) == 0 then
       for i = 2, #buf do
-        if String.byte(buf, i) == 255 then
-          local payload = String.sub(buf, 2, i - 1)
-          data = String.sub(buf, i + 1)
+        if byte(buf, i) == 255 then
+          local payload = sub(buf, 2, i - 1)
+          data = sub(buf, i + 1)
           if self.session and #payload > 0 then
             local status, message = pcall(JSON.decode, payload)
-            p('DECODE', payload, status, message)
             if not status then
               return self:do_reasoned_close(1002, 'Broken framing.')
             end
@@ -92,7 +98,7 @@ return function(self, origin, location, cb)
       end
       return 
     else
-      if String.byte(buf, 1) == 255 and String.byte(buf, 2) == 0 then
+      if byte(buf, 1) == 255 and byte(buf, 2) == 0 then
         self:do_reasoned_close(1001, 'Socket closed by the client')
       else
         self:do_reasoned_close(1002, 'Broken framing')
@@ -104,8 +110,8 @@ return function(self, origin, location, cb)
     data = data .. chunk
     if self.sec == false or #data >= 8 then
       if self.sec then
-        local nonce = slice(data, 1, 8)
-        data = slice(data, 9)
+        local nonce = sub(data, 1, 8)
+        data = sub(data, 9)
         local reply = validate_secret(self.req.headers, nonce)
         if not reply then
           self:do_reasoned_close()

@@ -21,7 +21,6 @@ local allowed_content_types = {
     [''] = true
   }
 }
-local Session = require('./session')
 local handler
 handler = function(self, nxt, root, sid, transport)
   local options = self:get_options(root)
@@ -40,7 +39,7 @@ handler = function(self, nxt, root, sid, transport)
   if not decoder then
     return self:fail('Payload expected.')
   end
-  local session = Session.get(sid)
+  local session = self:get_session(sid)
   if not session then
     return self:send(404)
   end

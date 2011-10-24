@@ -96,11 +96,6 @@ String.parse_query = function(str)
   return allvars
 end
 _G.Table = require('table')
-_G.d = function(...)
-  if process.env.DEBUG then
-    return p(...)
-  end
-end
 _G.is_array = function(obj)
   return type(obj) == 'table' and Table.maxn(obj) > 0
 end
@@ -149,3 +144,10 @@ _G.extend_unless = function(obj, with_obj)
   return obj
 end
 _G.JSON = require('json')
+if process.env.DEBUG == '1' then
+  _G.d = function(...)
+    return debug('DEBUG', ...)
+  end
+else
+  _G.d = function() end
+end

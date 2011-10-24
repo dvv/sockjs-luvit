@@ -37,10 +37,10 @@ handler = function(self, nxt, root, sid)
   }, false)
   self.protocol = 'htmlfile'
   self.curr_size, self.max_size = 0, options.response_limit
-  self.send_frame = function(self, payload)
-    return self:write_frame('<script>\np(' .. encode(payload) .. ');\n</script>\r\n')
+  self.send_frame = function(self, payload, continue)
+    return self:write_frame('<script>\np(' .. encode(payload) .. ');\n</script>\r\n', continue)
   end
-  local session = self:get_session(sid, options)
+  local session = self:create_session(sid, options)
   session:bind(self)
   return 
 end

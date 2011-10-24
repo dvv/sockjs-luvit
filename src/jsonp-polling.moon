@@ -4,7 +4,7 @@ import encode from JSON
 -- jsonp polling request handler
 --
 handler = (nxt, root, sid) =>
-  options = @get_options(root)
+  options = @get_options root
   return nxt() if not options
   @handle_balancer_cookie()
   @auto_chunked = false
@@ -17,10 +17,10 @@ handler = (nxt, root, sid) =>
   -- upgrade response to session handler
   @protocol = 'jsonp'
   @curr_size, @max_size = 0, 1
-  @send_frame = (payload) =>
-    @write_frame(callback .. '(' .. encode(payload) .. ');\r\n')
+  @send_frame = (payload, continue) =>
+    @write_frame(callback .. '(' .. encode(payload) .. ');\r\n', continue)
   -- register session
-  session = @get_session sid, options
+  session = @create_session sid, options
   session\bind self
   return
 

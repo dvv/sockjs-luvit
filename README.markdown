@@ -14,6 +14,7 @@ These commands will build luvit and necessary libraries (cjson and openssl).
 
     ./run
     open http://localhost:8080
+    open http://localhost:8080/tests-qunit.html
 
 ## Questions?
 

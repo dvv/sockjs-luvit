@@ -10,39 +10,8 @@ noop = () ->
 
 Response.prototype.auto_server = 'U-Gotta-Luvit'
 
-Response.prototype.safe_write0 = (chunk, cb = noop) =>
-  @write chunk, (err, result) ->
-    return cb err, result if not err
-    -- retry on EBUSY
-    if err
-      p('WRITERR?', err, result)
-      if err.code == 'EBUSY' or err.code == 'EINTR'
-        @safe_write chunk, cb
-    else
-      p('WRITE FAILED', err)
-      cb err
-
-CHUNK = 4096
-Response.prototype.safe_write = (data, cb) =>
-  buf = data
-  _write = () ->
-    return cb() if buf == '' and cb
-    s = buf\sub(1, CHUNK)
-    @write s, (err, result) ->
-      p('WRITTEN', @chunked, #s)
-      if not err
-        buf = buf\sub(CHUNK + 1)
-      else if err.code != 'EBUSY' and err.code != 'EINTR'
-        p('SAFE_WRITE FAILED', err)
-        cb err if cb
-        return
-      _write()
-      return
-  _write()
-  return
-
 Response.prototype.send = (code, data, headers, close = true) =>
-  p('RESPONSE FOR', @req and @req.method, @req and @req.url, 'IS', code, data)
+  d('RESPONSE FOR', @req and @req.method, @req and @req.url, 'IS', code, data)
   @write_head code, headers or {}
   @write data if data
   @finish() if close

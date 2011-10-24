@@ -94,8 +94,6 @@ String.parse_query = (str) ->
 
 _G.Table = require 'table'
 
-_G.d = (...) -> if process.env.DEBUG then p(...)
-
 -- is object an array
 _G.is_array = (obj) -> type(obj) == 'table' and Table.maxn(obj) > 0
 
@@ -143,3 +141,14 @@ _G.extend_unless = (obj, with_obj) ->
 -----------------------------------------------------------
 
 _G.JSON = require 'json'
+
+-----------------------------------------------------------
+--
+-- Debug
+--
+-----------------------------------------------------------
+
+if process.env.DEBUG == '1'
+  _G.d = (...) -> debug('DEBUG', ...)
+else
+  _G.d = () -> 

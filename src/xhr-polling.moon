@@ -2,7 +2,7 @@
 -- xhr polling request handler
 --
 handler = (nxt, root, sid) =>
-  options = @get_options(root)
+  options = @get_options root
   return nxt() if not options
   @handle_xhr_cors()
   @handle_balancer_cookie()
@@ -16,7 +16,7 @@ handler = (nxt, root, sid) =>
   @send_frame = (payload, continue) =>
     @write_frame(payload .. '\n', continue)
   -- register session
-  session = @get_session sid, options
+  session = @create_session sid, options
   session\bind self
   return
 

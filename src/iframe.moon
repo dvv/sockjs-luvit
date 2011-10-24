@@ -27,7 +27,7 @@ iframe_template = [[
 -- iframe request handler
 --
 handler = (nxt, root) =>
-  options = @get_options(root)
+  options = @get_options root
   return nxt() if not options
   content = gsub iframe_template, '{{ sockjs_url }}', options.sockjs_url
   etag = tostring(#content) -- TODO: more advanced hash needed

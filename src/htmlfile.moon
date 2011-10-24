@@ -27,7 +27,7 @@ htmlfile_template = htmlfile_template .. rep(' ', 1024 - #htmlfile_template + 14
 -- htmlfile request handler
 --
 handler = (nxt, root, sid) =>
-  options = @get_options(root)
+  options = @get_options root
   return nxt() if not options
   @handle_balancer_cookie()
   callback = @req.uri.query.c or @req.uri.query.callback
@@ -40,10 +40,10 @@ handler = (nxt, root, sid) =>
   -- upgrade response to session handler
   @protocol = 'htmlfile'
   @curr_size, @max_size = 0, options.response_limit
-  @send_frame = (payload) =>
-    @write_frame('<script>\np(' .. encode(payload) .. ');\n</script>\r\n')
+  @send_frame = (payload, continue) =>
+    @write_frame('<script>\np(' .. encode(payload) .. ');\n</script>\r\n', continue)
   -- register session
-  session = @get_session sid, options
+  session = @create_session sid, options
   session\bind self
   return
 

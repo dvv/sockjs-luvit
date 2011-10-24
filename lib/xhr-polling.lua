@@ -15,7 +15,7 @@ handler = function(self, nxt, root, sid)
   self.send_frame = function(self, payload, continue)
     return self:write_frame(payload .. '\n', continue)
   end
-  local session = self:get_session(sid, options)
+  local session = self:create_session(sid, options)
   session:bind(self)
   return 
 end

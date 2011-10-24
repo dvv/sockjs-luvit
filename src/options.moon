@@ -4,7 +4,7 @@ import date, time from require 'os'
 -- xhr transport OPTIONS request handler
 --
 handler = (nxt, root, sid, transport) =>
-  options = @get_options(root)
+  options = @get_options root
   return nxt() if not options
   -- TODO: guard
   --return nxt() if not transport in {'xhr_send', 'xhr', 'xhr_streaming'}

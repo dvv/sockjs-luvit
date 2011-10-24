@@ -23,9 +23,12 @@ end
 SockJS('/echo', {
   sockjs_url = '/sockjs.js',
   onconnection = function(conn)
-    p('CONNE', conn.sid, conn.id)
-    return conn:on('message', function(m)
-      return conn:send(m)
+    p('CONNECTED TO /echo', conn.sid, conn.id)
+    conn:on('message', function(m)
+      conn:send(m)
+    end)
+    conn:on('close', function()
+      p('DISCONNECTED FROM /echo', conn.sid, conn.id)
     end)
   end
 })
@@ -46,10 +49,8 @@ SockJS('/amplify', {
       local n
       status, n = pcall(Math.floor, tonumber(m, 10))
       if not status then
-        p('MATH FAILED', m, n)
         error(m)
       end
-      p('MATH', m, n)
       n = (n > 0 and n < 19) and n or 1
       conn:send(String.rep('x', Math.pow(2, n)))
     end)
@@ -58,4 +59,3 @@ SockJS('/amplify', {
 
 local s1 = Server.run(http_stack_layers(), 8080, '0.0.0.0')
 print('Server listening at http://localhost:8080/')
-require('repl')

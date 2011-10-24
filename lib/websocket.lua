@@ -55,7 +55,7 @@ handler = function(self, nxt, verb, root)
   location = location .. '://' .. self.req.headers.host .. self.req.url
   self:nodelay(true)
   self.protocol = 'websocket'
-  local session = self:get_session(nil, options)
+  local session = self:create_session(nil, options)
   local ver = self.req.headers['sec-websocket-version']
   local shaker
   if ver == '8' or ver == '7' or ver == '13' then

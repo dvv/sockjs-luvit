@@ -10,15 +10,13 @@ return {
 {
   'POST (/.+)/chunking_test[/]?$'
   (nxt, root) =>
-    options = @get_options(root)
+    options = @get_options root
     return nxt() if not options
     @handle_xhr_cors()
     @send 200, nil, {
       ['Content-Type']: 'application/javascript; charset=UTF-8' -- for FF
     }, false
     @on 'error', (err) ->
-      -- TODO: generalize?
-      p('CHUNKERRORRES', err)
       @finish()
     @write 'h\n'
     for k, delay in ipairs {1, 1+5, 25+5+1, 125+25+5+1, 625+125+25+5+1, 3125+625+125+25+5+1}
@@ -32,7 +30,7 @@ return {
 {
   'OPTIONS (/.+)/chunking_test[/]?$'
   (nxt, root) =>
-    options = @get_options(root)
+    options = @get_options root
     return nxt() if not options
     @handle_xhr_cors()
     @handle_balancer_cookie()

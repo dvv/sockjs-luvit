@@ -29,7 +29,7 @@ sockjs_routes = {
   require './iframe'
   require './base-url'
 }
-p(sockjs_routes)
+d(sockjs_routes)
 --process.exit()
 
 --
@@ -66,10 +66,9 @@ return (root, options) ->
   -- return request handler
   return (req, res, nxt) ->
 
-    res.get_options = (root) =>
-      --p('ROOT', root)
-      servers[root]
-    res.get_session = (sid, options) => Session.get_or_create sid, options
+    res.get_options = (root) => servers[root]
+    res.get_session = (sid) => Session.get sid
+    res.create_session = (sid, options) => Session.get_or_create sid, options
 
     -- TODO: these preliminary steps should belong to another implicit layer
     res.req = req

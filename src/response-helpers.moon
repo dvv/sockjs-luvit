@@ -26,12 +26,14 @@ Response.prototype.handle_balancer_cookie = () =>
 --
 Response.prototype.write_frame = (payload, continue) =>
   @curr_size = @curr_size + #payload if @max_size
-  debug('WRITE_FRAME', #payload < 128 and payload or #payload)
+  --d('WRITE_FRAME', #payload < 128 and payload or #payload)
   @write payload, (err) ->
     if @max_size and @curr_size >= @max_size
-      debug('MAXSIZE EXCEEDED, CLOSING', err)
+      --d('MAXSIZE EXCEEDED, CLOSING', err)
       @finish () ->
         continue err if continue
+    else
+      continue() if continue
     return
   return
 
@@ -39,7 +41,7 @@ Response.prototype.write_frame = (payload, continue) =>
 -- ???
 --
 Response.prototype.do_reasoned_close = (status, reason) =>
-  p('REASONED_CLOSE', @session and @session.sid, status, reason)
+  --d('REASONED_CLOSE', @session and @session.sid, status, reason)
   -- TODO: unbind on @on('closed')?
   @session\unbind() if @session
   @finish()

@@ -15,7 +15,7 @@ local sockjs_routes = {
   require('./iframe'),
   require('./base-url')
 }
-p(sockjs_routes)
+d(sockjs_routes)
 local Session = require('./session')
 local servers = { }
 return function(root, options)
@@ -52,7 +52,10 @@ return function(root, options)
     res.get_options = function(self, root)
       return servers[root]
     end
-    res.get_session = function(self, sid, options)
+    res.get_session = function(self, sid)
+      return Session.get(sid)
+    end
+    res.create_session = function(self, sid, options)
       return Session.get_or_create(sid, options)
     end
     res.req = req

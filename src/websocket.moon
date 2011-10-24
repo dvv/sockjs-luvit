@@ -30,7 +30,7 @@ verify_origin = (origin, list_of_origins) ->
 -- websocket request handler
 --
 handler = (nxt, verb, root) =>
-  options = @get_options(root)
+  options = @get_options root
   return nxt() if not options
   @auto_chunked = false
   if verb != 'GET'
@@ -53,7 +53,7 @@ handler = (nxt, verb, root) =>
   @nodelay true
   @protocol = 'websocket'
   -- register session
-  session = @get_session nil, options
+  session = @create_session nil, options
   ver = @req.headers['sec-websocket-version']
   shaker = if ver == '8' or ver == '7' or ver == '13' then hybi10 else hixie76
   shaker self, origin, location, () -> session\bind self

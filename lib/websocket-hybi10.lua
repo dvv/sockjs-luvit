@@ -18,17 +18,22 @@ do
   rshift = _table_0.rshift
   lshift = _table_0.lshift
 end
-local String = require('string')
-local slice = String.sub
-local char = String.char
-local byte = String.byte
+local sub, gsub, match, byte, char, base64
+do
+  local _table_0 = require('string')
+  sub = _table_0.sub
+  gsub = _table_0.gsub
+  match = _table_0.match
+  byte = _table_0.byte
+  char = _table_0.char
+  base64 = _table_0.base64
+end
 local Table = require('table')
 local push = Table.insert
-local join = Table.concat
 local encode, decode = JSON.encode, JSON.decode
 local verify_secret
 verify_secret = function(key)
-  local data = (String.match(key, '(%S+)')) .. '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+  local data = (match(key, '(%S+)')) .. '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
   local dg = get_digest('sha1'):init()
   dg:update(data)
   local r = dg:final()
@@ -48,11 +53,15 @@ table_to_string = function(tbl)
   return s
 end
 return function(self, origin, location, cb)
-  p('SHAKE8', origin, location)
+  local protocol = self.req.headers['sec-websocket-protocol']
+  if protocol then
+    protocol = (match(protocol, '[^,]*'))
+  end
   self:write_head(101, {
     ['Upgrade'] = 'WebSocket',
     ['Connection'] = 'Upgrade',
-    ['Sec-WebSocket-Accept'] = String.base64(verify_secret(self.req.headers['sec-websocket-key']))
+    ['Sec-WebSocket-Accept'] = base64(verify_secret(self.req.headers['sec-websocket-key'])),
+    ['Sec-WebSocket-Protocol'] = protocol
   })
   self.has_body = true
   local data = ''
@@ -74,7 +83,6 @@ return function(self, origin, location, cb)
       return 
     end
     local opcode = band(byte(buf, 1), 0x0F)
-    p('OPCODE', opcode)
     if opcode ~= 1 and opcode ~= 8 then
       error('not a text nor close frame', opcode)
       self:do_reasoned_close(1002, 'not a text nor close frame')
@@ -89,8 +97,6 @@ return function(self, origin, location, cb)
     local length = 0
     local key = { }
     local masking = band(byte(buf, 2), 0x80) ~= 0
-    p('MASKING', masking)
-    p('FIRST', first)
     if first < 126 then
       length = first
       l = 2
@@ -127,8 +133,7 @@ return function(self, origin, location, cb)
     if #buf < l + length then
       return 
     end
-    local payload = slice(buf, l + 1, l + length)
-    p('PAYLOAD', #payload)
+    local payload = sub(buf, l + 1, l + length)
     local tbl = { }
     if masking then
       for i = 1, length do
@@ -136,13 +141,11 @@ return function(self, origin, location, cb)
       end
       payload = table_to_string(tbl)
     end
-    data = slice(buf, l + length + 1)
-    p('ok', masking, length)
+    data = sub(buf, l + length + 1)
     if opcode == 1 then
       if self.session and #payload > 0 then
         local message
         status, message = pcall(decode, payload)
-        p('DECODE', status, message)
         if not status then
           return self:do_reasoned_close(1002, 'Broken framing.')
         end
@@ -158,7 +161,7 @@ return function(self, origin, location, cb)
           status = 1002
         end
         if #payload > 2 then
-          reason = slice(payload, 3)
+          reason = sub(payload, 3)
         else
           reason = 'Connection closed by user'
         end
