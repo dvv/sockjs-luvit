@@ -1,4 +1,4 @@
-// SockJS client, version 0.0.4.33.g9394, MIT License
+// SockJS client, version 0.0.4.41.gef63, MIT License
 //     https://github.com/sockjs/sockjs-client
 
 // JSON2 by Douglas Crockford (minified).
@@ -476,7 +476,7 @@ var SockJS = function(url, protocols, options) {
 // Inheritance
 SockJS.prototype = new REventTarget();
 
-SockJS.version = "0.0.4.33.g9394";
+SockJS.version = "0.0.4.41.gef63";
 
 SockJS.CONNECTING = 0;
 SockJS.OPEN = 1;
@@ -847,12 +847,25 @@ var jsonPGenericReceiver = function(url, callback) {
         }
     };
 
+    // IE9 fires 'error' event after orsc or before, in random order.
+    var loaded_okay = false;
+    var error_timer = null;
+
     script.id = 'a' + utils.random_string(8);
     script.src = url;
     script.type = 'text/javascript';
     script.charset = 'UTF-8';
-    script.onerror = function() {
-        close_script(utils.closeFrame(1006, "JSONP script loaded abnormally (onerror)"));
+    script.onerror = function(e) {
+        if (!error_timer) {
+            // Delay firing close_script.
+            error_timer = setTimeout(function() {
+                if (!loaded_okay) {
+                    close_script(utils.closeFrame(
+                        1006,
+                        "JSONP script loaded abnormally (onerror)"));
+                }
+            }, 1000);
+        }
     };
     script.onload = function(e) {
         close_script(utils.closeFrame(1006, "JSONP script loaded abnormally (onload)"));
@@ -861,6 +874,7 @@ var jsonPGenericReceiver = function(url, callback) {
     script.onreadystatechange = function(e) {
         if (/loaded|closed/.test(script.readyState)) {
             if (script && script.htmlFor && script.onclick) {
+                loaded_okay = true;
                 try {
                     // In IE, actually execute the script.
                     script.onclick();
