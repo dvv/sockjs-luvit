@@ -1,7 +1,7 @@
 ROOT=$(shell pwd)
 LUA_DIR=$(ROOT)/build/luvit/deps/luajit/src
 
-all: luvit json crypto lib
+all: luvit json crypto uuid lib
 
 luvit: build/luvit/build/luvit
 
@@ -32,7 +32,11 @@ build/lua-openssl:
 	wget http://github.com/zhaozg/lua-openssl/tarball/master -O - | tar -xzpf - -C build
 	mv build/zhaozg-lua-* $@
 
+uuid: modules/uuid/uuid.luvit
+modules/uuid/uuid.luvit: modules/uuid/uuid.c
+	gcc -shared -o $@ $^
+
 lib:
 	-which moonc && rm -fr lib && ( cd src ; moonc -t ../lib * )
 
-.PHONY: all lib crypto json
+.PHONY: all lib crypto json uuid

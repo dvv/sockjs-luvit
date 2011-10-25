@@ -5,7 +5,6 @@
 
 _G.JSON = require 'server/modules/json'
 
-Math = require 'math'
 Stack = require 'stack'
 
 --
@@ -57,7 +56,6 @@ return (root, options) ->
     origins: {'*:*'}
     disabled_transports: {}
     cache_age: 365 * 24 * 60 * 60 -- one year
-    get_nonce: () -> Math.random()
   }
 
   parse_url = require('url').parse

@@ -1,5 +1,4 @@
 _G.JSON = require('server/modules/json')
-local Math = require('math')
 local Stack = require('stack')
 require('./response-helpers')
 local transport_handlers = {
@@ -35,10 +34,7 @@ return function(root, options)
         '*:*'
       },
       disabled_transports = { },
-      cache_age = 365 * 24 * 60 * 60,
-      get_nonce = function()
-        return Math.random()
-      end
+      cache_age = 365 * 24 * 60 * 60
     }
   })
   local parse_url = require('url').parse

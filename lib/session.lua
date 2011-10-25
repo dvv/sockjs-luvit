@@ -8,6 +8,7 @@ do
   clear_timer = _table_0.clear_timer
 end
 local encode, decode = JSON.encode, JSON.decode
+local uuid = require('server/modules/uuid')
 local Table = require('table')
 local sessions = { }
 _G.s = function()
@@ -112,6 +113,9 @@ Session = (function()
       return 
     end,
     flush = function(self)
+      if not self.conn then
+        return 
+      end
       if #self.send_buffer > 0 then
         local messages = self.send_buffer
         self.send_buffer = { }
@@ -158,11 +162,7 @@ Session = (function()
         return false
       end
       Table.insert(self.send_buffer, type(payload) == 'table' and Table.concat(payload, ',') or tostring(payload))
-      if self.conn then
-        set_timeout(0, function()
-          return self:flush()
-        end)
-      end
+      self:flush()
       return true
     end
   }
@@ -175,7 +175,7 @@ Session = (function()
       self.sid = sid
       self.heartbeat_delay = options.heartbeat_delay
       self.disconnect_delay = options.disconnect_delay
-      self.id = options.get_nonce()
+      self.id = uuid()
       self.send_buffer = { }
       self.ready_state = Session.CONNECTING
       if self.sid then
@@ -184,7 +184,8 @@ Session = (function()
       self.to_tref = set_timeout(self.disconnect_delay, self.ontimeout, self)
       self.emit_connection_event = function()
         self.emit_connection_event = nil
-        return options.onconnection(self)
+        options.onconnection(self)
+        return 
       end
     end
   }, {

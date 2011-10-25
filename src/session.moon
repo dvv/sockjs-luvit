@@ -6,6 +6,7 @@
 EventEmitter = setmetatable {}, __index: require('emitter').meta
 import set_timeout, clear_timer from require 'timer'
 import encode, decode from JSON
+uuid = require 'server/modules/uuid'
 Table = require 'table'
 
 --
@@ -49,8 +50,7 @@ class Session extends EventEmitter
     -- setup options
     @heartbeat_delay = options.heartbeat_delay
     @disconnect_delay = options.disconnect_delay
-    -- TODO: uuid
-    @id = options.get_nonce()
+    @id = uuid()
 
     -- allocate buffer for outgoing messages
     @send_buffer = {}
@@ -65,6 +65,8 @@ class Session extends EventEmitter
     @emit_connection_event = ->
       @emit_connection_event = nil
       options.onconnection self
+      --options.onconnection setmetatable {foo: 'bar'}, {__index: self}
+      return
 
   --
   -- bind a connection to this session
@@ -188,6 +190,8 @@ class Session extends EventEmitter
 
   flush: =>
 
+    return if not @conn
+
     -- there are messages in queue
     if #@send_buffer > 0
 
@@ -251,8 +255,9 @@ class Session extends EventEmitter
     -- enqueue message
     Table.insert @send_buffer, type(payload) == 'table' and Table.concat(payload, ',') or tostring(payload)
     -- if connection is bound, try to flush the queue
-    if @conn
-      set_timeout 0, () -> @flush()
+    --if @conn
+    --  set_timeout 0, () -> @flush()
+    @flush()
 
     true
 
