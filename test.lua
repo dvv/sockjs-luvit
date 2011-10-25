@@ -18,7 +18,7 @@ http_stack_layers = function()
     SockJS('/echo', {
       sockjs_url = '/sockjs.js',
       onconnection = function(conn)
-        p('CONNECTED TO /echo', conn, conn.sid, conn.id)
+        p('CONNECTED TO /echo', conn.sid, conn.id)
         conn:on('message', function(m)
           conn:send(m)
         end)
