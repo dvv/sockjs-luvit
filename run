@@ -1,3 +1,3 @@
 #!/bin/sh
 
-make && strace -f -v -s1024 -o log luvit -i test.lua
+make && strace -f -v -s1024 -o log modules/server/build/luvit/build/luvit -i test.lua

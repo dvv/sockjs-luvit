@@ -33,6 +33,6 @@ build/lua-openssl:
 	mv build/zhaozg-lua-* $@
 
 lib:
-	which moonc && rm -fr lib && ( cd src ; moonc -t ../lib * )
+	-which moonc && rm -fr lib && ( cd src ; moonc -t ../lib * )
 
 .PHONY: all lib crypto json

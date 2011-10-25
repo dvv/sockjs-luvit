@@ -8,7 +8,7 @@
   //protocols = ['xhr-polling'];
   //protocols = ['iframe-xhr-polling'];
   //protocols = ['jsonp-polling'];
-  //protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
+  protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
 
   newSockJS = function(path, protocol) {
     var url;
