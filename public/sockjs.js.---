@@ -1,4 +1,4 @@
-// SockJS client, version 0.0.4.51.g0863, MIT License
+// SockJS client, version 0.0.4.41.gef63, MIT License
 //     https://github.com/sockjs/sockjs-client
 
 // JSON2 by Douglas Crockford (minified).
@@ -163,7 +163,7 @@ var xhrDefaultHeaders = {
     "User-Agent": '',
     "Accept": '',
     "Accept-Language": '',
-    "Content-Type": "text/plain;charset=UTF-8"
+    "Content-Type": "T"
 };
 
 if (navigator &&
@@ -476,7 +476,7 @@ var SockJS = function(url, protocols, options) {
 // Inheritance
 SockJS.prototype = new REventTarget();
 
-SockJS.version = "0.0.4.51.g0863";
+SockJS.version = "0.0.4.41.gef63";
 
 SockJS.CONNECTING = 0;
 SockJS.OPEN = 1;
@@ -1491,6 +1491,9 @@ var EventSourceReceiver = function(url) {
         // on network error it's CLOSED = 2
         var reason = abort_reason ? 'user' :
             (es.readyState !== 2 ? 'network' : 'permanent');
+if (reason === 'permanent') {
+  console.error('EVENTSOURCE', es, es.readyState, e);
+}
         that.es_close = es.onmessage = es.onerror = null;
         // EventSource reconnects automatically.
         es.close();

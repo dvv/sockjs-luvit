@@ -71,9 +71,7 @@ Session = (function()
         clear_timer(self.to_tref)
         self.to_tref = nil
       end
-      if self.conn then
-        self:flush()
-      end
+      self:flush()
       return 
     end,
     unbind = function(self)
@@ -162,7 +160,9 @@ Session = (function()
         return false
       end
       Table.insert(self.send_buffer, type(payload) == 'table' and Table.concat(payload, ',') or tostring(payload))
-      self:flush()
+      set_timeout(0, function()
+        return self:flush()
+      end)
       return true
     end
   }

@@ -117,7 +117,7 @@ class Session extends EventEmitter
       @to_tref = nil
 
     -- try to flush pending outgoing messages
-    @flush() if @conn
+    @flush()
 
     return
 
@@ -257,7 +257,7 @@ class Session extends EventEmitter
     -- if connection is bound, try to flush the queue
     --if @conn
     --  set_timeout 0, () -> @flush()
-    @flush()
+    set_timeout 0, () -> @flush()
 
     true
 
