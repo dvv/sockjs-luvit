@@ -1,9 +1,10 @@
 local encode = JSON.encode
-local gsub, rep
+local gsub, rep, parse_query
 do
   local _table_0 = require('string')
   gsub = _table_0.gsub
   rep = _table_0.rep
+  parse_query = _table_0.parse_query
 end
 local htmlfile_template = [[<!doctype html>
 <html><head>
@@ -20,13 +21,10 @@ local htmlfile_template = [[<!doctype html>
 ]]
 htmlfile_template = htmlfile_template .. rep(' ', 1024 - #htmlfile_template + 14) .. '\r\n\r\n'
 local handler
-handler = function(self, nxt, root, sid)
-  local options = self:get_options(root)
-  if not options then
-    return nxt()
-  end
+handler = function(self, options, sid)
   self:handle_balancer_cookie()
-  local callback = self.req.uri.query.c or self.req.uri.query.callback
+  local query = parse_query(self.req.uri.query)
+  local callback = query.c or query.callback
   if not callback then
     return self:fail('"callback" parameter required')
   end
@@ -45,6 +43,5 @@ handler = function(self, nxt, root, sid)
   return 
 end
 return {
-  'GET (/.+)/[^./]+/([^./]+)/htmlfile[/]?$',
-  handler
+  GET = handler
 }

@@ -1,6 +1,16 @@
 Response = require 'response'
 
 --
+-- reports 404 Not found
+-- N.B. for some reasons it's considered special
+--
+Response.prototype.e404 = () =>
+  @send 404, '404 Error: Page not found', {
+    ['Content-Type']: 'text/plain; charset=UTF-8'
+  }
+  return
+
+--
 -- allow cross-origin requests
 --
 Response.prototype.handle_xhr_cors = () =>

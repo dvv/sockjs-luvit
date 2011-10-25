@@ -7,11 +7,8 @@ import set_timeout from require 'timer'
 --
 
 return {
-{
-  'POST (/.+)/chunking_test[/]?$'
-  (nxt, root) =>
-    options = @get_options root
-    return nxt() if not options
+
+  POST: (options) =>
     @handle_xhr_cors()
     @send 200, nil, {
       ['Content-Type']: 'application/javascript; charset=UTF-8' -- for FF
@@ -26,12 +23,8 @@ return {
         else
           @write 'h\n'
     return
-}
-{
-  'OPTIONS (/.+)/chunking_test[/]?$'
-  (nxt, root) =>
-    options = @get_options root
-    return nxt() if not options
+
+  OPTIONS: (options) =>
     @handle_xhr_cors()
     @handle_balancer_cookie()
     @send 204, nil, {
@@ -41,5 +34,5 @@ return {
       ['Access-Control-Max-Age']: tostring(options.cache_age)
     }
     return
-}
+
 }

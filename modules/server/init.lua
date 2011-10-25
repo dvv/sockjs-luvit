@@ -1,1 +1,1 @@
-return require(__dirname .. '/lib')
+return require('./lib')

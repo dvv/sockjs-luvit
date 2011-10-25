@@ -29,12 +29,8 @@ verify_origin = (origin, list_of_origins) ->
 --
 -- websocket request handler
 --
-handler = (nxt, verb, root) =>
-  options = @get_options root
-  return nxt() if not options
+handler = (options) =>
   @auto_chunked = false
-  if verb != 'GET'
-    return @send 405
   -- Upgrade: WebSocket
   if lower(@req.headers.upgrade or '') != 'websocket'
     return @send 400, 'Can "Upgrade" only to "WebSocket".'
@@ -48,7 +44,7 @@ handler = (nxt, verb, root) =>
     return @send 400, 'Unverified origin.'
   --
   location = (if origin and origin[1..5] == 'https' then 'wss' else 'ws')
-  location = location .. '://' .. @req.headers.host .. @req.url
+  location = location .. '://' .. @req.headers.host .. @req.real_url
   -- upgrade response to session handler
   @nodelay true
   @protocol = 'websocket'
@@ -60,6 +56,7 @@ handler = (nxt, verb, root) =>
   return
 
 return {
-  '(%w+) (/.+)/[^./]+/[^./]+/websocket[/]?$'
-  handler
+
+  GET: handler
+
 }

@@ -1,9 +1,5 @@
 local handler
-handler = function(self, nxt, root, sid)
-  local options = self:get_options(root)
-  if not options then
-    return nxt()
-  end
+handler = function(self, options, sid)
   self:handle_xhr_cors()
   self:handle_balancer_cookie()
   self.auto_chunked = false
@@ -20,6 +16,5 @@ handler = function(self, nxt, root, sid)
   return 
 end
 return {
-  'POST (/.+)/[^./]+/([^./]+)/xhr[/]?$',
-  handler
+  POST = handler
 }

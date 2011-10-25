@@ -1,5 +1,5 @@
 import encode from JSON
-import gsub, rep from require 'string'
+import gsub, rep, parse_query from require 'string'
 
 --
 -- template
@@ -26,11 +26,10 @@ htmlfile_template = htmlfile_template .. rep(' ', 1024 - #htmlfile_template + 14
 --
 -- htmlfile request handler
 --
-handler = (nxt, root, sid) =>
-  options = @get_options root
-  return nxt() if not options
+handler = (options, sid) =>
   @handle_balancer_cookie()
-  callback = @req.uri.query.c or @req.uri.query.callback
+  query = parse_query @req.uri.query
+  callback = query.c or query.callback
   return @fail '"callback" parameter required' if not callback
   content = gsub htmlfile_template, '{{ callback }}', callback
   @send 200, content, {
@@ -48,6 +47,7 @@ handler = (nxt, root, sid) =>
   return
 
 return {
-  'GET (/.+)/[^./]+/([^./]+)/htmlfile[/]?$'
-  handler
+
+  GET: handler
+
 }

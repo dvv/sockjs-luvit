@@ -1,13 +1,15 @@
 local encode = JSON.encode
+local parse_query
+do
+  local _table_0 = require('string')
+  parse_query = _table_0.parse_query
+end
 local handler
-handler = function(self, nxt, root, sid)
-  local options = self:get_options(root)
-  if not options then
-    return nxt()
-  end
+handler = function(self, options, sid)
   self:handle_balancer_cookie()
   self.auto_chunked = false
-  local callback = self.req.uri.query.c or self.req.uri.query.callback
+  local query = parse_query(self.req.uri.query)
+  local callback = query.c or query.callback
   if not callback then
     return self:fail('"callback" parameter required')
   end
@@ -25,6 +27,5 @@ handler = function(self, nxt, root, sid)
   return 
 end
 return {
-  'GET (/.+)/[^./]+/([^./]+)/jsonp[/]?$',
-  handler
+  GET = handler
 }

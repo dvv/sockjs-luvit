@@ -1,14 +1,14 @@
 import encode from JSON
+import parse_query from require 'string'
 
 --
 -- jsonp polling request handler
 --
-handler = (nxt, root, sid) =>
-  options = @get_options root
-  return nxt() if not options
+handler = (options, sid) =>
   @handle_balancer_cookie()
   @auto_chunked = false
-  callback = @req.uri.query.c or @req.uri.query.callback
+  query = parse_query @req.uri.query
+  callback = query.c or query.callback
   return @fail '"callback" parameter required' if not callback
   @send 200, nil, {
     ['Content-Type']: 'application/javascript; charset=UTF-8'
@@ -25,6 +25,7 @@ handler = (nxt, root, sid) =>
   return
 
 return {
-  'GET (/.+)/[^./]+/([^./]+)/jsonp[/]?$'
-  handler
+
+  GET: handler
+
 }

@@ -8,26 +8,22 @@ end
 local push = require('table').insert
 local join = require('table').concat
 local allowed_content_types = {
-  xhr = {
+  xhr_send = {
     ['application/json'] = decode,
     ['text/plain'] = decode,
     ['application/xml'] = decode,
     ['T'] = decode,
     [''] = decode
   },
-  jsonp = {
+  jsonp_send = {
     ['application/x-www-form-urlencoded'] = parse_query,
     ['text/plain'] = true,
     [''] = true
   }
 }
 local handler
-handler = function(self, nxt, root, sid, transport)
-  local options = self:get_options(root)
-  if not options then
-    return nxt()
-  end
-  local xhr = transport == 'xhr'
+handler = function(self, options, sid, transport)
+  local xhr = transport == 'xhr_send'
   if xhr then
     self:handle_xhr_cors()
   end
@@ -41,7 +37,7 @@ handler = function(self, nxt, root, sid, transport)
   end
   local session = self:get_session(sid)
   if not session then
-    return self:send(404)
+    return self:e404()
   end
   local data = { }
   self.req:on('data', function(chunk)
@@ -92,6 +88,5 @@ handler = function(self, nxt, root, sid, transport)
   return 
 end
 return {
-  'POST (/.+)/[^./]+/([^./]+)/(%w+)_send[/]?$',
-  handler
+  POST = handler
 }

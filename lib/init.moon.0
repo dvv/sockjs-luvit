@@ -1,0 +1,143 @@
+_G.JSON = require('server/modules/json')
+local Math = require('math')
+require('./response-helpers')
+local transport_handlers = {
+  xhr_send = require('./xhr-jsonp-send'),
+  jsonp_send = require('./xhr-jsonp-send'),
+  xhr = require('./xhr-polling'),
+  jsonp = require('./jsonp-polling'),
+  xhr_streaming = require('./xhr-streaming'),
+  websocket = require('./websocket'),
+  htmlfile = require('./htmlfile'),
+  eventsource = require('./eventsource')
+}
+local other_handlers = {
+  options = require('./options'),
+  chunking_test = require('./chunking-test'),
+  iframe = require('./iframe')
+}
+local Session = require('./session')
+local servers = { }
+return function(root, options)
+  if root then
+    servers[root] = options
+    if not options then
+      return 
+    end
+    setmetatable(options, {
+      __index = {
+        sockjs_url = 'http://sockjs.github.com/sockjs-client/sockjs-latest.min.js',
+        heartbeat_delay = 25000,
+        disconnect_delay = 5000,
+        response_limit = 128 * 1024,
+        origins = {
+          '*:*'
+        },
+        disabled_transports = { },
+        cache_age = 365 * 24 * 60 * 60,
+        get_nonce = function()
+          return Math.random()
+        end
+      }
+    })
+  end
+  local parse_url = require('url').parse
+  local sub, gsub, match, gmatch, find, parse_query
+  do
+    local _table_0 = require('string')
+    sub = _table_0.sub
+    gsub = _table_0.gsub
+    match = _table_0.match
+    gmatch = _table_0.gmatch
+    find = _table_0.find
+    parse_query = _table_0.parse_query
+  end
+  return function(req, res, nxt)
+    res.get_session = function(self, sid)
+      return Session.get(sid)
+    end
+    res.create_session = function(self, sid, options)
+      return Session.get_or_create(sid, options)
+    end
+    res.req = req
+    if not req.uri then
+      req.uri = parse_url(req.url)
+    end
+    local path = req.uri.pathname
+    p('REQUEST', req.method, req.url)
+    local parts = {
+      false,
+      false,
+      false,
+      false
+    }
+    local i = 0
+    for v in gmatch(path, '/([^/]*)') do
+      i = i + 1
+      if v ~= '' then
+        parts[i] = v
+      end
+    end
+    p('???', parts)
+    local srv, sid, transport
+    root, srv, sid, transport = unpack(parts)
+    options = servers['/' .. root]
+    if not options then
+      return nxt()
+    end
+    if sid and transport then
+      if find(sid, '.', 1, true) or find(srv, '.', 1, true) then
+        return res:e404()
+      end
+      if req.method == 'OPTIONS' then
+        other_handlers.options(res, options)
+      else
+        local handler = transport_handlers[transport]
+        if not handler then
+          return res:e404()
+        end
+        handler = handler[req.method]
+        if not handler then
+          return res:send(405)
+        end
+        p('SESSION!', req.method, root, sid, transport)
+        handler(res, options, sid, transport)
+      end
+      return 
+    else
+      if srv == 'chunking_test' then
+        local handler = other_handlers.chunking_test[req.method]
+        if not handler then
+          return res:send(405)
+        end
+        p('CHUNKING')
+        handler(res, options)
+        return 
+      else
+        if srv and match(srv, 'iframe[0-9-.a-z_]*%.html') then
+          local handler = other_handlers.iframe[req.method]
+          if not handler then
+            return res:e404()
+          end
+          p('IFRAME')
+          handler(res, options)
+          return 
+        else
+          if not srv then
+            p('ROOT', parts)
+            if req.method ~= 'GET' then
+              return res:e404()
+            end
+            res:send(200, 'Welcome to SockJS!\n', {
+              ['Content-Type'] = 'text/plain; charset=UTF-8'
+            })
+            return 
+          end
+        end
+      end
+    end
+    p('FALLEN BACK', req.url)
+    res:e404()
+    return 
+  end
+end

@@ -26,15 +26,8 @@ local _ = [==[  if list_of_origins.indexOf('*:*') isnt -1
     return false
 ]==]
 local handler
-handler = function(self, nxt, verb, root)
-  local options = self:get_options(root)
-  if not options then
-    return nxt()
-  end
+handler = function(self, options)
   self.auto_chunked = false
-  if verb ~= 'GET' then
-    return self:send(405)
-  end
   if lower(self.req.headers.upgrade or '') ~= 'websocket' then
     return self:send(400, 'Can "Upgrade" only to "WebSocket".')
   end
@@ -52,7 +45,7 @@ handler = function(self, nxt, verb, root)
       return 'ws'
     end
   end)())
-  location = location .. '://' .. self.req.headers.host .. self.req.url
+  location = location .. '://' .. self.req.headers.host .. self.req.real_url
   self:nodelay(true)
   self.protocol = 'websocket'
   local session = self:create_session(nil, options)
@@ -69,6 +62,5 @@ handler = function(self, nxt, verb, root)
   return 
 end
 return {
-  '(%w+) (/.+)/[^./]+/[^./]+/websocket[/]?$',
-  handler
+  GET = handler
 }

@@ -7,13 +7,13 @@ join = require('table').concat
 -- given Content-Type:, provide content decoder
 --
 allowed_content_types = {
-  xhr:
+  xhr_send:
     ['application/json']: decode
     ['text/plain']: decode
     ['application/xml']: decode
     ['T']: decode
     ['']: decode
-  jsonp:
+  jsonp_send:
     ['application/x-www-form-urlencoded']: parse_query
     ['text/plain']: true
     ['']: true
@@ -22,10 +22,8 @@ allowed_content_types = {
 --
 -- xhr_send and jsonp_send request handlers
 --
-handler = (nxt, root, sid, transport) =>
-  options = @get_options root
-  return nxt() if not options
-  xhr = transport == 'xhr'
+handler = (options, sid, transport) =>
+  xhr = transport == 'xhr_send'
   @handle_xhr_cors() if xhr
   @handle_balancer_cookie()
   @auto_chunked = false
@@ -36,7 +34,7 @@ handler = (nxt, root, sid, transport) =>
   return @fail 'Payload expected.' if not decoder
   -- bail out unless such session exists
   session = @get_session sid
-  return @send 404 if not session
+  return @e404() if not session
   -- collect data
   data = {}
   @req\on 'data', (chunk) ->
@@ -72,6 +70,7 @@ handler = (nxt, root, sid, transport) =>
   return
 
 return {
-  'POST (/.+)/[^./]+/([^./]+)/(%w+)_send[/]?$'
-  handler
+
+  POST: handler
+
 }

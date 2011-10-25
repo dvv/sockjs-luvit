@@ -1,9 +1,7 @@
 --
 -- xhr polling request handler
 --
-handler = (nxt, root, sid) =>
-  options = @get_options root
-  return nxt() if not options
+handler = (options, sid) =>
   @handle_xhr_cors()
   @handle_balancer_cookie()
   @auto_chunked = false
@@ -21,6 +19,7 @@ handler = (nxt, root, sid) =>
   return
 
 return {
-  'POST (/.+)/[^./]+/([^./]+)/xhr[/]?$'
-  handler
+
+  POST: handler
+
 }

@@ -1,6 +1,5 @@
 _G.JSON = require('server/modules/json')
 local Math = require('math')
-local Stack = require('stack')
 require('./response-helpers')
 local transport_handlers = {
   xhr_send = require('./xhr-jsonp-send'),
@@ -20,27 +19,28 @@ local other_handlers = {
 local Session = require('./session')
 local servers = { }
 return function(root, options)
-  assert(root)
-  servers[root] = options
-  if not options then
-    return 
+  if root then
+    servers[root] = options
+    if not options then
+      return 
+    end
+    setmetatable(options, {
+      __index = {
+        sockjs_url = 'http://sockjs.github.com/sockjs-client/sockjs-latest.min.js',
+        heartbeat_delay = 25000,
+        disconnect_delay = 5000,
+        response_limit = 128 * 1024,
+        origins = {
+          '*:*'
+        },
+        disabled_transports = { },
+        cache_age = 365 * 24 * 60 * 60,
+        get_nonce = function()
+          return Math.random()
+        end
+      }
+    })
   end
-  setmetatable(options, {
-    __index = {
-      sockjs_url = 'http://sockjs.github.com/sockjs-client/sockjs-latest.min.js',
-      heartbeat_delay = 25000,
-      disconnect_delay = 5000,
-      response_limit = 128 * 1024,
-      origins = {
-        '*:*'
-      },
-      disabled_transports = { },
-      cache_age = 365 * 24 * 60 * 60,
-      get_nonce = function()
-        return Math.random()
-      end
-    }
-  })
   local parse_url = require('url').parse
   local sub, gsub, match, gmatch, find, parse_query
   do
@@ -57,23 +57,26 @@ return function(root, options)
     local _table_0 = require('path')
     normalize = _table_0.normalize
   end
-  return Stack.mount(root, function(req, res, nxt)
-    res.req = req
+  return function(req, res, nxt)
     res.get_session = function(self, sid)
       return Session.get(sid)
     end
     res.create_session = function(self, sid, options)
       return Session.get_or_create(sid, options)
     end
-    local path = req.uri.pathname
+    res.req = req
+    if not req.uri then
+      req.uri = parse_url(req.url)
+    end
+    local path = normalize(req.uri.pathname)
     if sub(path, -1, -1) == '/' then
       path = sub(path, 1, -2)
     end
-    p()
-    p('REQUEST ' .. root, req.method, path, req.url, req.real_url)
-    if req.url == '/' then
+    p('REQUEST', req.method, req.url)
+    local index = find(path, '/', 2, true)
+    if not index then
       p('ROOT?', parts)
-      if req.method ~= 'GET' then
+      if not servers[path] or req.method ~= 'GET' then
         return res:e404()
       end
       res:send(200, 'Welcome to SockJS!\n', {
@@ -81,7 +84,14 @@ return function(root, options)
       })
       return 
     end
-    if path == '/chunking_test' then
+    root = sub(path, 1, index - 1)
+    options = servers[root]
+    if not options then
+      return nxt()
+    end
+    path = sub(path, index + 1)
+    p('???', root, path)
+    if path == 'chunking_test' then
       local handler = other_handlers.chunking_test[req.method]
       if not handler then
         return res:send(405)
@@ -90,7 +100,7 @@ return function(root, options)
       handler(res, options)
       return 
     end
-    if match(path, '^/iframe[0-9-.a-z_]*%.html$') then
+    if match(path, 'iframe[0-9-.a-z_]*%.html$') then
       local handler = other_handlers.iframe[req.method]
       if not handler then
         return res:e404()
@@ -99,19 +109,11 @@ return function(root, options)
       handler(res, options)
       return 
     end
-    local sid, transport = match(path, '^/[^./]+/([^./]+)/([a-z_]+)$')
-    p('???', sid, transport, req.uri)
-    if sid then
+    local sid, transport = match(path, '^[^./]+/([^./]+)/([a-z_]+)$')
+    if sid and transport then
       if req.method == 'OPTIONS' then
         other_handlers.options(res, options)
       else
-        local _list_0 = options.disabled_transports
-        for _index_0 = 1, #_list_0 do
-          local t = _list_0[_index_0]
-          if t == transport then
-            return res:e404()
-          end
-        end
         local handler = transport_handlers[transport]
         if not handler then
           return res:e404()
@@ -128,5 +130,5 @@ return function(root, options)
     p('FALLEN BACK', req.url)
     res:e404()
     return 
-  end)
+  end
 end

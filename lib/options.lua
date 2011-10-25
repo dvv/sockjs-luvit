@@ -4,12 +4,7 @@ do
   date = _table_0.date
   time = _table_0.time
 end
-local handler
-handler = function(self, nxt, root, sid, transport)
-  local options = self:get_options(root)
-  if not options then
-    return nxt()
-  end
+return function(self, options)
   self:handle_xhr_cors()
   self:handle_balancer_cookie()
   self:send(204, nil, {
@@ -20,7 +15,3 @@ handler = function(self, nxt, root, sid, transport)
   })
   return 
 end
-return {
-  'OPTIONS (/.+)/[^./]+/([^./]+)/(xhr_?%w*)[/]?$',
-  handler
-}
