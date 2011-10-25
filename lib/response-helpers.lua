@@ -1,10 +1,4 @@
 local Response = require('response')
-Response.prototype.e404 = function(self)
-  self:send(404, '404 Error: Page not found', {
-    ['Content-Type'] = 'text/plain; charset=UTF-8'
-  })
-  return 
-end
 Response.prototype.handle_xhr_cors = function(self)
   local origin = self.req.headers['origin'] or '*'
   self:set_header('Access-Control-Allow-Origin', origin)

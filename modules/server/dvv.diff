@@ -1,0 +1,121 @@
+diff --git a/lib/response.lua b/lib/response.lua
+index d0c5824..f053ac8 100644
+--- a/lib/response.lua
++++ b/lib/response.lua
+@@ -216,7 +216,7 @@ function Response.prototype:write_continue(callback)
+   self.userdata:write('HTTP/1.1 100 Continue\r\n\r\n', callback)
+ end
+ 
+-function Response.prototype:write(chunk, callback)
++--[[function Response.prototype:write(chunk, callback)
+   if self.has_body == false then error("Body not allowed") end
+   if not self.headers_sent then
+     self.has_body = true
+@@ -229,6 +229,59 @@ function Response.prototype:write(chunk, callback)
+     return userdata:write("\r\n", callback)
+   end
+   return userdata:write(chunk, callback)
++end]]--
++
++function Response.prototype:write(chunk, callback)
++  if self.has_body == false then error("Body not allowed") end
++  if not self.headers_sent then
++    self.has_body = true
++    self:flush_head()
++  end
++  if self.chunked then
++    --self:_write(string_format("%x\r\n", #chunk))
++    --self:_write(chunk)
++    --return self:_write("\r\n", callback)
++    return self:_write(string_format("%x\r\n", #chunk) .. chunk .. "\r\n", callback)
++  end
++  return self:_write(chunk, callback)
++end
++
++local CHUNK = 4096
++function Response.prototype:_write(data, callback)
++  local userdata = self.userdata
++  local buf = data
++  local left = #buf
++  local _write
++  _write = function()
++    --debug('WRITING?', #buf)
++    if buf == '' then
++      if callback then
++        callback(left)
++      end
++      return
++    end
++    local s = buf:sub(1, CHUNK)
++    --debug('WRITING!', #s)
++    userdata:write(s, function(err, result)
++      --debug('WRITTEN', #s, #s < 16 and s or #s)
++      if not err or err.code == 'ENOENT' then
++        buf = buf:sub(CHUNK + 1)
++        left = #buf
++        --debug('LEFT', #buf)
++      else
++        --debug('ERRR', err)
++        if err.code ~= 'EBUSY' and err.code ~= 'EINTR' and err.code ~= 'ENOENT' then
++          debug('SAFE_WRITE FAILED', err)
++          if callback then
++            callback(err)
++          end
++          return
++        end
++      end
++      _write()
++    end)
++  end
++  _write()
+ end
+ 
+ function Response.prototype:finish(chunk, callback)
+@@ -258,12 +311,16 @@ function Response.prototype:finish(chunk, callback)
+   if self.chunked then
+     self.userdata:write('0\r\n\r\n')
+   end
+-  self:shutdown(function ()
++  --[[self:shutdown(function ()
++    self:close()
++    if callback then
++      self:on("closed", callback)
++    end
++  end)]]--
+     self:close()
+     if callback then
+       self:on("closed", callback)
+     end
+-  end)
+ end
+ 
+ 
+diff --git a/lib/stack.lua b/lib/stack.lua
+index eee24b3..b73ceeb 100644
+--- a/lib/stack.lua
++++ b/lib/stack.lua
+@@ -59,11 +59,12 @@ function Stack.mount(mountpoint, ...)
+ 
+   local stack = Stack.compose(...)
+ 
+-  if mountpoint:sub(#mountpoint) == "/" then
+-    mountpoint = mountpoint:sub(1, #mountpoint - 1)
+-  end
++  --if mountpoint:sub(#mountpoint) == "/" then
++  --  mountpoint = mountpoint:sub(1, #mountpoint - 1)
++  --end
+ 
+-  local matchpoint = mountpoint .. "/"
++  --local matchpoint = mountpoint .. "/"
++  local matchpoint = mountpoint
+ 
+   return function(req, res, continue)
+     local url = req.url
+@@ -91,6 +92,7 @@ local Debug = require('debug')
+ function Stack.errorHandler(req, res, err)
+   if err then
+     res:set_code(500)
++    debug(Debug.traceback(err))
+     res:finish(Debug.traceback(err) .. "\n")
+     return
+   end

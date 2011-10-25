@@ -37,7 +37,7 @@ handler = function(self, options, sid, transport)
   end
   local session = self:get_session(sid)
   if not session then
-    return self:e404()
+    return self:serve_not_found()
   end
   local data = { }
   self.req:on('data', function(chunk)

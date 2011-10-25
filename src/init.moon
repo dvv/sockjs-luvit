@@ -75,50 +75,42 @@ return (root, options) ->
     -- strip trailing slash
     path = req.uri.pathname
     path = sub(path, 1, -2) if sub(path, -1, -1) == '/'
-    p()
-    p('REQUEST ' .. root, req.method, path, req.url, req.real_url)
 
     -- exact root requested -> serve greeting
-    if req.url == '/'
-      p('ROOT?', parts)
-      return res\e404() if req.method != 'GET'
-      res\send 200, 'Welcome to SockJS!\n', ['Content-Type']: 'text/plain; charset=UTF-8'
-      return
+    if req.url == '' or req.url == '/' --req.url == '/'
+      if req.method == 'GET'
+        res\send 200, 'Welcome to SockJS!\n', ['Content-Type']: 'text/plain; charset=UTF-8'
+        return
 
-    if path == '/chunking_test'
+    else if path == '/chunking_test'
       handler = other_handlers.chunking_test[req.method]
       return res\send 405 if not handler
-      p('CHUNKING')
       handler res, options
       return
 
-    if match(path, '^/iframe[0-9-.a-z_]*%.html$')
+    else if match(path, '^/iframe[0-9-.a-z_]*%.html$')
       handler = other_handlers.iframe[req.method]
-      return res\e404() if not handler
-      p('IFRAME')
-      handler res, options
-      return
+      if handler
+        handler res, options
+        return
 
-    sid, transport = match path, '^/[^./]+/([^./]+)/([a-z_]+)$'
-    p('???', sid, transport, req.uri)
+    else
+      sid, transport = match path, '^/[^./]+/([^./]+)/([a-z_]+)$'
+      --p('???', sid, transport)
+      if sid
+        if req.method == 'OPTIONS'
+          other_handlers.options res, options
+        else
+          --return res\serve_not_found() if options.disabled_transports[transport]
+          for t in *options.disabled_transports
+            return res\serve_not_found() if t == transport
+          handler = transport_handlers[transport]
+          if handler
+            handler = handler[req.method]
+            return res\send 405 if not handler
+            handler res, options, sid, transport
+        return
 
-    if sid
-      if req.method == 'OPTIONS'
-        -- TODO: guard
-        --return res\e404() if not transport in {'xhr_send', 'xhr', 'xhr_streaming'}
-        other_handlers.options res, options
-      else
-        --return res\e404() if options.disabled_transports[transport]
-        for t in *options.disabled_transports
-          return res\e404() if t == transport
-        handler = transport_handlers[transport]
-        return res\e404() if not handler
-        handler = handler[req.method]
-        return res\send 405 if not handler
-        p('SESSION!', req.method, root, sid, transport)
-        handler res, options, sid, transport
-      return
-
-    p('FALLEN BACK', req.url)
-    res\e404()
+    -- not found
+    res\serve_not_found()
     return

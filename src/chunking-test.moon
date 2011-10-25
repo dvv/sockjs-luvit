@@ -22,6 +22,8 @@ return {
           @write (rep ' ', 2048) .. 'h\n'
         else
           @write 'h\n'
+        --if k == 6
+        --  @finish()
     return
 
   OPTIONS: (options) =>

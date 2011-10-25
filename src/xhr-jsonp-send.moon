@@ -34,7 +34,7 @@ handler = (options, sid, transport) =>
   return @fail 'Payload expected.' if not decoder
   -- bail out unless such session exists
   session = @get_session sid
-  return @e404() if not session
+  return @serve_not_found() if not session
   -- collect data
   data = {}
   @req\on 'data', (chunk) ->

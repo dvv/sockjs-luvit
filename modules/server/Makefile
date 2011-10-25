@@ -11,6 +11,7 @@ build/luvit/build/luvit: build/luvit
 build/luvit:
 	mkdir -p build
 	git clone http://github.com/creationix/luvit build/luvit
+	( cd build/luvit ; patch -Np1 <../../dvv.diff )
 
 json: build/lua-cjson/cjson.so
 
@@ -32,8 +33,6 @@ build/lua-openssl:
 	mv build/zhaozg-lua-* $@
 
 lib:
-	rm -fr lib
-	cd src ; moonc -t ../lib *
-
+	which moonc && rm -fr lib && ( cd src ; moonc -t ../lib * )
 
 .PHONY: all lib crypto json
