@@ -60,6 +60,7 @@ Session = (function()
         return self:unbind()
       end)
       conn:once('error', function(err)
+        debug('ERROR', self.sid, err)
         return conn:close()
       end)
       if self.ready_state == Session.CONNECTING then

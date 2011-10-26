@@ -99,7 +99,7 @@ class Session extends EventEmitter
       --debug('END', @sid)
       @unbind()
     conn\once 'error', (err) ->
-      --debug('ERROR', @sid, err)
+      debug('ERROR', @sid, err)
       --error(err)
       conn\close()
 
