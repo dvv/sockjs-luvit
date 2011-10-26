@@ -59,10 +59,12 @@ Session = (function()
       conn:once('end', function()
         return self:unbind()
       end)
-      conn:once('error', function(err)
-        debug('ERROR', self.sid, err)
-        return conn:close()
-      end)
+      local _ = [==[ THIS IS DONE EARLIER
+    conn\once 'error', (err) ->
+      debug('ERROR', @sid, err)
+      --error(err)
+      conn\close()
+    ]==]
       if self.ready_state == Session.CONNECTING then
         self.conn:send_frame('o')
         self.ready_state = Session.OPEN

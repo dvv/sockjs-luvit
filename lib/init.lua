@@ -55,6 +55,14 @@ return function(root, options)
   end
   return Stack.mount(root, function(req, res, nxt)
     res.req = req
+    req:once('error', function(err)
+      debug('REQ-ERROR', err)
+      return req:close()
+    end)
+    res:once('error', function(err)
+      debug('RES-ERROR', err)
+      return res:close()
+    end)
     res.get_session = function(self, sid)
       return Session.get(sid)
     end

@@ -67,6 +67,14 @@ return (root, options) ->
 
     res.req = req
 
+    -- provide errbacks, to not let assertions in libuv fail
+    req\once 'error', (err) ->
+      debug('REQ-ERROR', err)
+      req\close()
+    res\once 'error', (err) ->
+      debug('RES-ERROR', err)
+      res\close()
+
     res.get_session = (sid) => Session.get sid
     res.create_session = (sid, options) => Session.get_or_create sid, options
 

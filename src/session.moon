@@ -98,10 +98,12 @@ class Session extends EventEmitter
     conn\once 'end', () ->
       --debug('END', @sid)
       @unbind()
+    [==[ THIS IS DONE EARLIER
     conn\once 'error', (err) ->
       debug('ERROR', @sid, err)
       --error(err)
       conn\close()
+    ]==]
 
     -- send the opening frame
     if @ready_state == Session.CONNECTING
