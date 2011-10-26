@@ -27,10 +27,10 @@ Response.prototype.handle_balancer_cookie = () =>
 delay = require('timer').set_timeout
 Response.prototype.write_frame = (payload, continue) =>
   @curr_size = @curr_size + #payload if @max_size
-  debug('WRITE_FRAME', #payload < 128 and payload or #payload)
+  --debug('WRITE_FRAME', #payload < 128 and payload or #payload)
   @write payload, (err) ->
     if @max_size and @curr_size >= @max_size
-      debug('MAXSIZE EXCEEDED, CLOSING', err)
+      --debug('MAXSIZE EXCEEDED, CLOSING', err)
       @finish () ->
         continue err if continue
     else
