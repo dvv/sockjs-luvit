@@ -500,6 +500,7 @@ SockJS.prototype._dispatchOpen = function() {
     } else {
         // The server might have been restarted, and lost track of our
         // connection.
+console.error('LOST SESSION', that.readyState);
         that._didClose(1006, "Server lost session");
     }
 };
