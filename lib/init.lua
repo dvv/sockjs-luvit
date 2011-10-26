@@ -33,7 +33,9 @@ return function(root, options)
       origins = {
         '*:*'
       },
-      disabled_transports = { },
+      disabled_transports = {
+        'xhr_send'
+      },
       cache_age = 365 * 24 * 60 * 60
     }
   })

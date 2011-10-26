@@ -193,6 +193,7 @@ utils.createXDR = function(method, url, payload, callback) {
     var onerror = xdr.ontimeout = xdr.onerror = function() {
         mock_xhr.status = 500;
         mock_xhr.readyState = 4;
+console.error('XDR', mock_xhr, callback);
         callback(mock_xhr);
         cleanup();
     };
@@ -270,8 +271,10 @@ utils.createXHR = function(method, url, payload, callback) {
 
     xhr.onreadystatechange = function (e) {
         if (xhr && callback) {
+//console.error('XHRSTATE', xhr, e, callback);
             callback(xhr, e);
             if (xhr && xhr.readyState === 4) {
+console.error('STATE4');
                 cleanup();
             }
         }
@@ -279,6 +282,7 @@ utils.createXHR = function(method, url, payload, callback) {
     xhr.send(payload);
     utils.attachEvent('unload', cleanup);
     return function (abort_reason) {
+console.error('ABORT?', xhr, abort_reason);
         if (callback) {
             callback(xhr, null, abort_reason);
             cleanup();
@@ -526,7 +530,7 @@ SockJS.prototype._didClose = function(code, reason) {
         clearTimeout(that._transport_tref);
         that._transport_tref = null;
     }
-utils.log('CLOSE', code, reason);
+
     var close_event = new SimpleEvent("close", {code: code,
                                                 reason: reason,
                                                 wasClean: utils.userSetCode(code)});
@@ -806,6 +810,7 @@ var jsonPGenericSender = function(url, payload, callback) {
 
 var ajaxSender = function(url, payload, callback) {
     var orsc = function (xhr, e, abort_reason) {
+console.error('TESTS BLOCKED', arguments);
         if(xhr.readyState === 4 || abort_reason) {
             callback(xhr.status, abort_reason);
         }
