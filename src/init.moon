@@ -54,7 +54,7 @@ return (root, options) ->
     disconnect_delay: 5000
     response_limit: 128 * 1024
     origins: {'*:*'}
-    disabled_transports: { 'xhr_send' }
+    disabled_transports: { } --'xhr_send' }
     cache_age: 365 * 24 * 60 * 60 -- one year
   }
 
