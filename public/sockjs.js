@@ -1609,9 +1609,6 @@ var XhrReceiver = function(url, opts) {
             }
         }
         if (xhr.readyState === 4 || abort_reason) {
-if(xhr.status === 0) {
-console.error('XHR0', xhr, abort_reason);
-}
             var reason = abort_reason ? 'user' :
                 ((xhr.status === 200 || xhr.status === 0) ? 'network' : 'permanent');
             that.xhr_close = null;
