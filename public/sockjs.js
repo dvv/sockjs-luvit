@@ -873,7 +873,6 @@ var jsonPGenericReceiver = function(url, callback) {
     };
 
     script.onreadystatechange = function(e) {
-console.error('READYCHANGED', e, script.readyState);
         if (/loaded|closed/.test(script.readyState)) {
             if (script && script.htmlFor && script.onclick) {
                 loaded_okay = true;
@@ -1609,8 +1608,11 @@ var XhrReceiver = function(url, opts) {
             }
         }
         if (xhr.readyState === 4 || abort_reason) {
-            var reason = (abort_reason || xhr.status === 0) ? 'user' :
-                (xhr.status === 200 ? 'network' : 'permanent');
+if(xhr.status === 0) {
+console.error('XHR0', xhr, abort_reason);
+}
+            var reason = abort_reason ? 'user' :
+                ((xhr.status === 200 || xhr.status === 0) ? 'network' : 'permanent');
             that.xhr_close = null;
             that.dispatchEvent(new SimpleEvent('close', {reason: reason}));
         }

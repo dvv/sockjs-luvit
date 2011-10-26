@@ -1,6 +1,7 @@
 var arrIndexOf, batch_factory_factory, batch_factory_factory_amp, chunking_test_factory, echo_factory_factory, factor_batch_large, factor_batch_large_amp, factor_echo_basic, factor_echo_large_message, factor_echo_rich, factor_echo_special_chars, factor_echo_unicode, factor_server_close, factor_user_close, newSockJS, protocol, protocols, test_invalid_url_404, test_invalid_url_500, test_invalid_url_port, test_protocol_errors, test_protocol_messages, _i, _j, _len, _len2;
 //protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
 protocols = ['jsonp-polling'];
+protocols = ['xhr-polling', 'iframe-xhr-polling'];
 newSockJS = function(path, protocol) {
   var url;
   url = /^http/.test(path) ? path : client_opts.url + path;
