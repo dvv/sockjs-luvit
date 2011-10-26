@@ -193,7 +193,6 @@ utils.createXDR = function(method, url, payload, callback) {
     var onerror = xdr.ontimeout = xdr.onerror = function() {
         mock_xhr.status = 500;
         mock_xhr.readyState = 4;
-console.error('XDR', mock_xhr, callback);
         callback(mock_xhr);
         cleanup();
     };
@@ -271,10 +270,8 @@ utils.createXHR = function(method, url, payload, callback) {
 
     xhr.onreadystatechange = function (e) {
         if (xhr && callback) {
-//console.error('XHRSTATE', xhr, e, callback);
             callback(xhr, e);
             if (xhr && xhr.readyState === 4) {
-console.error('STATE4');
                 cleanup();
             }
         }
@@ -282,7 +279,6 @@ console.error('STATE4');
     xhr.send(payload);
     utils.attachEvent('unload', cleanup);
     return function (abort_reason) {
-console.error('ABORT?', xhr, abort_reason);
         if (callback) {
             callback(xhr, null, abort_reason);
             cleanup();
@@ -504,7 +500,7 @@ SockJS.prototype._dispatchOpen = function() {
     } else {
         // The server might have been restarted, and lost track of our
         // connection.
-console.error('LOST SESSION', that.readyState, that._connid);
+utils.log('LOST SESSION', that.readyState, that._connid);
         that._didClose(1006, "Server lost session");
     }
 };
@@ -566,7 +562,7 @@ SockJS.prototype._didMessage = function(data) {
     var type = data.slice(0, 1);
     switch(type) {
     case 'o':
-console.error('OPENFRAME', that.readyState, that._connid);
+if (that.readyState !== 0) utils.log('OPENFRAMEFOROPENCONN', that._connid);
         that._dispatchOpen();
         break;
     case 'a':
@@ -810,7 +806,6 @@ var jsonPGenericSender = function(url, payload, callback) {
 
 var ajaxSender = function(url, payload, callback) {
     var orsc = function (xhr, e, abort_reason) {
-console.error('TESTS BLOCKED', arguments);
         if(xhr.readyState === 4 || abort_reason) {
             callback(xhr.status, abort_reason);
         }
