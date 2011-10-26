@@ -93,15 +93,15 @@ class Session extends EventEmitter
     conn.session = self
     -- when connection ends, unbind it
     conn\once 'closed', () ->
-      --d('CLOSEDEVENT')
+      --debug('CLOSED', @sid)
       @unbind()
     conn\once 'end', () ->
-      --d('END')
+      --debug('END', @sid)
       @unbind()
     conn\once 'error', (err) ->
-      --d('ERROR', err)
+      --debug('ERROR', @sid, err)
       --error(err)
-      conn\finish()
+      conn\close()
 
     -- send the opening frame
     if @ready_state == Session.CONNECTING
@@ -234,7 +234,8 @@ class Session extends EventEmitter
     @close_frame = Session.closing_frame status, reason
     -- if connection is bound, use it to send the closing frame
     if @conn
-      @conn\send_frame @close_frame, () -> @conn\finish()
+      @conn\send_frame @close_frame, () ->
+        @conn\finish() if @conn
       --@conn\send_frame @close_frame
       --@conn\finish()
 

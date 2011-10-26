@@ -17,6 +17,7 @@ Response.prototype.handle_balancer_cookie = function(self)
   self:set_header('Set-Cookie', 'JSESSIONID=' .. jsid .. '; path=/')
   return 
 end
+local delay = require('timer').set_timeout
 Response.prototype.write_frame = function(self, payload, continue)
   if self.max_size then
     self.curr_size = self.curr_size + #payload

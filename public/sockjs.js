@@ -525,6 +525,7 @@ SockJS.prototype._didClose = function(code, reason) {
         clearTimeout(that._transport_tref);
         that._transport_tref = null;
     }
+utils.log('CLOSE', code, reason);
     var close_event = new SimpleEvent("close", {code: code,
                                                 reason: reason,
                                                 wasClean: utils.userSetCode(code)});
@@ -872,6 +873,7 @@ var jsonPGenericReceiver = function(url, callback) {
     };
 
     script.onreadystatechange = function(e) {
+console.error('READYCHANGED', e, script.readyState);
         if (/loaded|closed/.test(script.readyState)) {
             if (script && script.htmlFor && script.onclick) {
                 loaded_okay = true;
@@ -906,7 +908,7 @@ var jsonPGenericReceiver = function(url, callback) {
                 script.event = "onclick";
             } catch (x) {}
             script.async = true;
-        } else if (typeof _document.attachEvent === 'function') {
+        } else if (typeof _document.attachEvent === 'function' && !navigator.userAgent.match(/msie/i)) {
             // Opera, second sync script hack
             script2 = _document.createElement('script');
             script2.text = "try{var a = document.getElementById('"+script.id+"'); if(a)a.onerror();}catch(x){};";

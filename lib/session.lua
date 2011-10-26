@@ -60,7 +60,7 @@ Session = (function()
         return self:unbind()
       end)
       conn:once('error', function(err)
-        return conn:finish()
+        return conn:close()
       end)
       if self.ready_state == Session.CONNECTING then
         self.conn:send_frame('o')
@@ -150,7 +150,9 @@ Session = (function()
       self.close_frame = Session.closing_frame(status, reason)
       if self.conn then
         self.conn:send_frame(self.close_frame, function()
-          return self.conn:finish()
+          if self.conn then
+            return self.conn:finish()
+          end
         end)
       end
       return 

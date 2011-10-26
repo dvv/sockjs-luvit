@@ -24,6 +24,7 @@ Response.prototype.handle_balancer_cookie = () =>
 --
 -- write a frame, honoring max_size set for this request
 --
+delay = require('timer').set_timeout
 Response.prototype.write_frame = (payload, continue) =>
   @curr_size = @curr_size + #payload if @max_size
   --d('WRITE_FRAME', #payload < 128 and payload or #payload)
