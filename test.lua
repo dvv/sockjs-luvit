@@ -4,6 +4,8 @@ local SockJS = require('sockjs-luvit')
 local String = require('string')
 local Math = require('math')
 
+local broadcast = {}
+
 local http_stack_layers
 http_stack_layers = function()
   return {
@@ -17,6 +19,7 @@ http_stack_layers = function()
     }),
     SockJS('/echo', {
       sockjs_url = '/sockjs.js',
+      response_limit = 4096,
       onconnection = function(conn)
         p('CONNECTED TO /echo', conn.sid, conn.id)
         conn:on('message', function(m)
@@ -29,6 +32,7 @@ http_stack_layers = function()
     }),
     SockJS('/close', {
       sockjs_url = '/sockjs.js',
+      response_limit = 4096,
       onconnection = function(conn)
         p('CONNC', conn.sid, conn.id)
         return conn:close(3000, 'Go away!')
@@ -36,6 +40,7 @@ http_stack_layers = function()
     }),
     SockJS('/disabled_websocket_echo', {
       sockjs_url = '/sockjs.js',
+      response_limit = 4096,
       disabled_transports = {'websocket'},
       onconnection = function(conn)
         p('CONNECTED TO /echo', conn.sid, conn.id)
@@ -49,6 +54,7 @@ http_stack_layers = function()
     }),
     SockJS('/amplify', {
       sockjs_url = '/sockjs.js',
+      response_limit = 4096,
       onconnection = function(conn)
         p('CONNA', conn.sid, conn.id)
         conn:on('message', function(m)
@@ -59,6 +65,23 @@ http_stack_layers = function()
           end
           n = (n > 0 and n < 19) and n or 1
           conn:send(String.rep('x', Math.pow(2, n)))
+        end)
+      end
+    }),
+    SockJS('/broadcast', {
+      sockjs_url = '/sockjs.js',
+      response_limit = 4096,
+      onconnection = function(conn)
+        p('CONNECTED TO /broadcast', conn.sid, conn.id)
+        broadcast[conn.id] = conn
+        conn:on('message', function(m)
+          for k, v in pairs(broadcast) do
+            v:send(m)
+          end
+        end)
+        conn:on('close', function()
+          p('DISCONNECTED FROM /broadcast', conn.sid, conn.id)
+          broadcast[conn.id] = nil
         end)
       end
     }),

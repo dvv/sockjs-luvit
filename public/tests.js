@@ -2,10 +2,10 @@ var arrIndexOf, batch_factory_factory, batch_factory_factory_amp, chunking_test_
 //protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
 protocols = ['jsonp-polling'];
 protocols = ['jsonp-polling', 'xhr-polling', 'iframe-xhr-polling'];
-protocols = ['iframe-eventsource'];
 protocols = ['xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
 //protocols = ['websocket'];
 protocols = ['websocket', 'xhr-streaming', 'iframe-eventsource', 'iframe-htmlfile', 'xhr-polling', 'iframe-xhr-polling', 'jsonp-polling'];
+//protocols = ['iframe-eventsource'];
 newSockJS = function(path, protocol) {
   var url;
   url = /^http/.test(path) ? path : client_opts.url + path;

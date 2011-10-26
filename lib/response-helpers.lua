@@ -22,8 +22,10 @@ Response.prototype.write_frame = function(self, payload, continue)
   if self.max_size then
     self.curr_size = self.curr_size + #payload
   end
+  debug('WRITE_FRAME', #payload < 128 and payload or #payload)
   self:write(payload, function(err)
     if self.max_size and self.curr_size >= self.max_size then
+      debug('MAXSIZE EXCEEDED, CLOSING', err)
       self:finish(function()
         if continue then
           return continue(err)

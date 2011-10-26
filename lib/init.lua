@@ -61,6 +61,7 @@ return function(root, options)
     end)
     res:once('error', function(err)
       debug('RES-ERROR', err)
+      res.closed = true
       return res:close()
     end)
     res.get_session = function(self, sid)

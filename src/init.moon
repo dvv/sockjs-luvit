@@ -73,6 +73,7 @@ return (root, options) ->
       req\close()
     res\once 'error', (err) ->
       debug('RES-ERROR', err)
+      res.closed = true
       res\close()
 
     res.get_session = (sid) => Session.get sid

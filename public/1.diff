@@ -1,0 +1,24 @@
+1c1
+< // SockJS client, version 0.1.0.2.g4ae2, MIT License
+---
+> // SockJS client, version 0.0.4.51.g0863, MIT License
+479c479
+< SockJS.version = "0.1.0.2.g4ae2";
+---
+> SockJS.version = "0.0.4.51.g0863";
+502a503
+> utils.log('LOST SESSION', that.readyState, that._connid);
+527a529
+> 
+535a538
+> console.error('BADCLOSE', that, code, reason);
+562a566
+> if (that.readyState !== 0) utils.log('OPENFRAMEFOROPENCONN', that._connid);
+909c913
+<         } else if (typeof _document.attachEvent === 'function') {
+---
+>         } else if (typeof _document.attachEvent === 'function' && !navigator.userAgent.match(/msie/i)) {
+1611c1615
+<                 (xhr.status === 200 ? 'network' : 'permanent');
+---
+>                 ((xhr.status === 200 || xhr.status === 0) ? 'network' : 'permanent');

@@ -15,31 +15,69 @@ do
   set_timeout = _table_0.set_timeout
 end
 return {
-  POST = function(self, options)
+  POST1 = function(self, options)
     self:handle_xhr_cors()
     self:send(200, nil, {
       ['Content-Type'] = 'application/javascript; charset=UTF-8'
     }, false)
-    self:on('error', function(err)
-      return self:finish()
-    end)
-    self:write('h\n')
-    for k, delay in ipairs({
+    local delays = {
       1,
-      1 + 5,
-      25 + 5 + 1,
-      125 + 25 + 5 + 1,
-      625 + 125 + 25 + 5 + 1,
-      3125 + 625 + 125 + 25 + 5 + 1
-    }) do
-      set_timeout(delay, function()
-        if k == 1 then
-          return self:write((rep(' ', 2048)) .. 'h\n')
-        else
-          return self:write('h\n')
+      5,
+      25,
+      125,
+      625,
+      3125
+    }
+    local send
+    send = function(k)
+      if k == 2 then
+        self:write((rep(' ', 2048)) .. 'h\n')
+      else
+        self:write('h\n')
+      end
+      if k == 7 then
+        p('CHUNKINGDONE')
+        if not self.closed then
+          self:finish()
         end
-      end)
+      else
+        set_timeout(delays[k], send, k + 1)
+      end
+      return 
     end
+    send(1)
+    return 
+  end,
+  POST = function(self, options)
+    self:handle_xhr_cors()
+    self:set_code(200)
+    self:set_header('Content-Type', 'application/javascript; charset=UTF-8')
+    local delays = {
+      1,
+      5,
+      25,
+      125,
+      625,
+      3125
+    }
+    local send
+    send = function(k)
+      if k == 2 then
+        self:write((rep(' ', 2048)) .. 'h\n')
+      else
+        self:write('h\n')
+      end
+      if k == 7 then
+        p('CHUNKINGDONE')
+        if not self.closed then
+          self:finish()
+        end
+      else
+        set_timeout(delays[k], send, k + 1)
+      end
+      return 
+    end
+    send(1)
     return 
   end,
   OPTIONS = function(self, options)
