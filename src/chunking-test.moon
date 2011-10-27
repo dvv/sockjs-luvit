@@ -20,7 +20,6 @@ return {
       else
         @write 'h\n'
       if k == 7
-        p('CHUNKINGDONE')
         @finish() if not @closed
       else
         set_timeout delays[k], send, k + 1

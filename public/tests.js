@@ -302,7 +302,7 @@ for (_i = 0, _len = protocols.length; _i < _len; _i++) {
   test_protocol_messages(protocol);
 }
 module('other');
-/*test("amending url", function() {
+test("amending url", function() {
   var dl, r, t;
   dl = document.location;
   r = new SockJS('//blah:1/abc', []);
@@ -370,7 +370,7 @@ chunking_test_factory = function(counter) {
     a = new Array(counter);
     go = function() {
       return SockJS.chunkingTest(client_opts.url + '/echo', function(r) {
-        if ($.browser.msie && $.browser.version < 8) {
+        if ($.browser.msie && $.browser.version < 8 && !window.performance) {
           equal(r, false);
         } else {
           equal(r, true);
@@ -431,4 +431,4 @@ asyncTest("disabled websocket test", function() {
 for (_j = 0, _len2 = protocols.length; _j < _len2; _j++) {
   protocol = protocols[_j];
   test_protocol_errors(protocol);
-}*/
+}
