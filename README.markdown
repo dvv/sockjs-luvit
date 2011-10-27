@@ -16,7 +16,7 @@ These commands will build luvit and necessary libraries (cjson and openssl).
     open http://localhost:8080
     open http://localhost:8080/tests-qunit.html
 
-[Done](sockjs-luvit/tests.pdf)
+[Done](https://docs.google.com/document/d/1uJHFPdptMkZteXK7qxEPHfmKJIZTfu9vNV7Dg7WYUi8/edit?pli=1)
 
 ## Questions?
 
