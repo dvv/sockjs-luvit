@@ -36,7 +36,6 @@ return {
         self:write('h\n')
       end
       if k == 7 then
-        p('CHUNKINGDONE')
         if not self.closed then
           self:finish()
         end

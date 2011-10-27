@@ -133,7 +133,7 @@ return (mount, root, options = {}) ->
 
     -- map url to local filesystem filename
     -- TODO: Path.normalize(req.url)
-    filename = root .. req.url\sub(mount_found_at + #mount)
+    filename = root .. req.uri.pathname\sub(mount_found_at + #mount)
 
     -- stream file, possibly caching the contents for later reuse
     file = cache[filename]

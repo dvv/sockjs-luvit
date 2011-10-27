@@ -135,7 +135,7 @@ return function(mount, root, options)
     if req.method ~= 'GET' or mount_found_at ~= 1 then
       return continue()
     end
-    local filename = root .. req.url:sub(mount_found_at + #mount)
+    local filename = root .. req.uri.pathname:sub(mount_found_at + #mount)
     local file = cache[filename]
     if file and file.headers['Last-Modified'] == req.headers['if-modified-since'] then
       return res:serve_not_modified(file.headers)
