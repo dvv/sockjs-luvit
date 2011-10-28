@@ -899,25 +899,24 @@ var jsonPGenericReceiver = function(url, callback) {
     //   http://jaubourg.net/2010/07/loading-script-as-onclick-handler-of.html
     // Also, read on that about script ordering:
     //   http://wiki.whatwg.org/wiki/Dynamic_Script_Execution_Order
-    if (typeof script.async === 'undefined' && _document.attachEvent) {
+    if (typeof script.async === 'undefined') {
         // According to mozilla docs, in recent browsers script.async defaults
         // to 'true', so we may use it to detect a good browser:
         // https://developer.mozilla.org/en/HTML/Element/script
-        if (!/opera/i.test(navigator.userAgent)) {
-            // Naively assume we're in IE
+        if (typeof _document.attachEvent === 'object') {
+            // ie
             try {
                 script.htmlFor = script.id;
                 script.event = "onclick";
             } catch (x) {}
             script.async = true;
-        } else {
+        } else if (typeof _document.attachEvent === 'function' && !window.performance) {
             // Opera, second sync script hack
             script2 = _document.createElement('script');
             script2.text = "try{var a = document.getElementById('"+script.id+"'); if(a)a.onerror();}catch(x){};";
             script.async = script2.async = false;
         }
-    }
-    if (typeof script.async !== 'undefined') {
+    } else {
         script.async = true;
     }
 
