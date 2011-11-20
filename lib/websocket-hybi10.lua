@@ -6,27 +6,17 @@ end
 local floor, random
 do
   local _table_0 = require('math')
-  floor = _table_0.floor
-  random = _table_0.random
+  floor, random = _table_0.floor, _table_0.random
 end
 local band, bor, bxor, rshift, lshift
 do
   local _table_0 = require('bit')
-  band = _table_0.band
-  bor = _table_0.bor
-  bxor = _table_0.bxor
-  rshift = _table_0.rshift
-  lshift = _table_0.lshift
+  band, bor, bxor, rshift, lshift = _table_0.band, _table_0.bor, _table_0.bxor, _table_0.rshift, _table_0.lshift
 end
 local sub, gsub, match, byte, char, base64
 do
   local _table_0 = require('string')
-  sub = _table_0.sub
-  gsub = _table_0.gsub
-  match = _table_0.match
-  byte = _table_0.byte
-  char = _table_0.char
-  base64 = _table_0.base64
+  sub, gsub, match, byte, char, base64 = _table_0.sub, _table_0.gsub, _table_0.match, _table_0.byte, _table_0.char, _table_0.base64
 end
 local Table = require('table')
 local push = Table.insert

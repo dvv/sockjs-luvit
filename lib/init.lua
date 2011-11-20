@@ -41,12 +41,7 @@ return function(root, options)
   local sub, gsub, match, gmatch, find, parse_query
   do
     local _table_0 = require('string')
-    sub = _table_0.sub
-    gsub = _table_0.gsub
-    match = _table_0.match
-    gmatch = _table_0.gmatch
-    find = _table_0.find
-    parse_query = _table_0.parse_query
+    sub, gsub, match, gmatch, find, parse_query = _table_0.sub, _table_0.gsub, _table_0.match, _table_0.gmatch, _table_0.find, _table_0.parse_query
   end
   local normalize
   do

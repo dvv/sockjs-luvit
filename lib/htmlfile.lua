@@ -2,9 +2,7 @@ local encode = JSON.encode
 local gsub, rep, parse_query
 do
   local _table_0 = require('string')
-  gsub = _table_0.gsub
-  rep = _table_0.rep
-  parse_query = _table_0.parse_query
+  gsub, rep, parse_query = _table_0.gsub, _table_0.rep, _table_0.parse_query
 end
 local htmlfile_template = [[<!doctype html>
 <html><head>

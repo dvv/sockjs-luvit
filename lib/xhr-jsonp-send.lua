@@ -2,8 +2,7 @@ local decode = JSON.decode
 local match, parse_query
 do
   local _table_0 = require('string')
-  match = _table_0.match
-  parse_query = _table_0.parse_query
+  match, parse_query = _table_0.match, _table_0.parse_query
 end
 local push = require('table').insert
 local join = require('table').concat

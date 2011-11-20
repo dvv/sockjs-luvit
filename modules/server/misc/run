@@ -1,5 +1,0 @@
-#!/bin/sh
-
-rm uuid.so
-gcc -o uuid.so -shared uuid.c
-LD_PRELOAD=./uuid.so luvit test.lua

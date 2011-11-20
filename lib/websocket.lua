@@ -1,8 +1,7 @@
 local lower, match
 do
   local _table_0 = require('string')
-  lower = _table_0.lower
-  match = _table_0.match
+  lower, match = _table_0.lower, _table_0.match
 end
 local hixie76 = require('./websocket-hixie76')
 local hybi10 = require('./websocket-hybi10')

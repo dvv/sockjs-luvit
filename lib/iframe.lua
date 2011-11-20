@@ -1,8 +1,7 @@
 local date, time
 do
   local _table_0 = require('os')
-  date = _table_0.date
-  time = _table_0.time
+  date, time = _table_0.date, _table_0.time
 end
 local gsub
 do

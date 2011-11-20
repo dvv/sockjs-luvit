@@ -1,3 +1,0 @@
-#!/bin/sh
-
-luvit -e "local uuid = require('uuid') for i = 1, 10000 do uuid() end"

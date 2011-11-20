@@ -4,8 +4,7 @@ local EventEmitter = setmetatable({ }, {
 local set_timeout, clear_timer
 do
   local _table_0 = require('timer')
-  set_timeout = _table_0.set_timeout
-  clear_timer = _table_0.clear_timer
+  set_timeout, clear_timer = _table_0.set_timeout, _table_0.clear_timer
 end
 local encode, decode = JSON.encode, JSON.decode
 local uuid = require('server/modules/uuid')
