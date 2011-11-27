@@ -1,5 +1,25 @@
-// SockJS client, version 0.1.0.2.g4ae2, MIT License
-//     https://github.com/sockjs/sockjs-client
+/* SockJS client, version 0.1.1, http://sockjs.org, MIT License
+
+Copyright (C) 2011 VMware, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 
 // JSON2 by Douglas Crockford (minified).
 var JSON;JSON||(JSON={}),function(){function str(a,b){var c,d,e,f,g=gap,h,i=b[a];i&&typeof i=="object"&&typeof i.toJSON=="function"&&(i=i.toJSON(a)),typeof rep=="function"&&(i=rep.call(b,a,i));switch(typeof i){case"string":return quote(i);case"number":return isFinite(i)?String(i):"null";case"boolean":case"null":return String(i);case"object":if(!i)return"null";gap+=indent,h=[];if(Object.prototype.toString.apply(i)==="[object Array]"){f=i.length;for(c=0;c<f;c+=1)h[c]=str(c,i)||"null";e=h.length===0?"[]":gap?"[\n"+gap+h.join(",\n"+gap)+"\n"+g+"]":"["+h.join(",")+"]",gap=g;return e}if(rep&&typeof rep=="object"){f=rep.length;for(c=0;c<f;c+=1)typeof rep[c]=="string"&&(d=rep[c],e=str(d,i),e&&h.push(quote(d)+(gap?": ":":")+e))}else for(d in i)Object.prototype.hasOwnProperty.call(i,d)&&(e=str(d,i),e&&h.push(quote(d)+(gap?": ":":")+e));e=h.length===0?"{}":gap?"{\n"+gap+h.join(",\n"+gap)+"\n"+g+"}":"{"+h.join(",")+"}",gap=g;return e}}function quote(a){escapable.lastIndex=0;return escapable.test(a)?'"'+a.replace(escapable,function(a){var b=meta[a];return typeof b=="string"?b:"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})+'"':'"'+a+'"'}function f(a){return a<10?"0"+a:a}"use strict",typeof Date.prototype.toJSON!="function"&&(Date.prototype.toJSON=function(a){return isFinite(this.valueOf())?this.getUTCFullYear()+"-"+f(this.getUTCMonth()+1)+"-"+f(this.getUTCDate())+"T"+f(this.getUTCHours())+":"+f(this.getUTCMinutes())+":"+f(this.getUTCSeconds())+"Z":null},String.prototype.toJSON=Number.prototype.toJSON=Boolean.prototype.toJSON=function(a){return this.valueOf()});var cx=/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,escapable=/[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,gap,indent,meta={"\b":"\\b","\t":"\\t","\n":"\\n","\f":"\\f","\r":"\\r",'"':'\\"',"\\":"\\\\"},rep;typeof JSON.stringify!="function"&&(JSON.stringify=function(a,b,c){var d;gap="",indent="";if(typeof c=="number")for(d=0;d<c;d+=1)indent+=" ";else typeof c=="string"&&(indent=c);rep=b;if(!b||typeof b=="function"||typeof b=="object"&&typeof b.length=="number")return str("",{"":a});throw new Error("JSON.stringify")}),typeof JSON.parse!="function"&&(JSON.parse=function(text,reviver){function walk(a,b){var c,d,e=a[b];if(e&&typeof e=="object")for(c in e)Object.prototype.hasOwnProperty.call(e,c)&&(d=walk(e,c),d!==undefined?e[c]=d:delete e[c]);return reviver.call(a,b,e)}var j;text=String(text),cx.lastIndex=0,cx.test(text)&&(text=text.replace(cx,function(a){return"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)}));if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,"@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,"]").replace(/(?:^|:|,)(?:\s*\[)+/g,""))){j=eval("("+text+")");return typeof reviver=="function"?walk({"":j},""):j}throw new SyntaxError("JSON.parse")})}()
@@ -476,7 +496,7 @@ var SockJS = function(url, protocols, options) {
 // Inheritance
 SockJS.prototype = new REventTarget();
 
-SockJS.version = "0.1.0.2.g4ae2";
+SockJS.version = "0.1.1.dirty";
 
 SockJS.CONNECTING = 0;
 SockJS.OPEN = 1;
@@ -511,6 +531,12 @@ SockJS.prototype._dispatchMessage = function(data) {
     that.dispatchEvent(new SimpleEvent("message", {data: data}));
 };
 
+SockJS.prototype._dispatchHeartbeat = function(data) {
+    var that = this;
+    if (that.readyState !== SockJS.OPEN)
+        return;
+    that.dispatchEvent(new SimpleEvent('heartbeat', {}));
+};
 
 SockJS.prototype._didClose = function(code, reason) {
     var that = this;
@@ -576,7 +602,8 @@ SockJS.prototype._didMessage = function(data) {
         var payload = JSON.parse(data.slice(1) || '[]');
         that._didClose(payload[0], payload[1]);
         break;
-    case 'h':// heartbeat, ignore
+    case 'h':
+        that._dispatchHeartbeat();
         break;
     }
 };
@@ -895,24 +922,25 @@ var jsonPGenericReceiver = function(url, callback) {
     //   http://jaubourg.net/2010/07/loading-script-as-onclick-handler-of.html
     // Also, read on that about script ordering:
     //   http://wiki.whatwg.org/wiki/Dynamic_Script_Execution_Order
-    if (typeof script.async === 'undefined') {
+    if (typeof script.async === 'undefined' && _document.attachEvent) {
         // According to mozilla docs, in recent browsers script.async defaults
         // to 'true', so we may use it to detect a good browser:
         // https://developer.mozilla.org/en/HTML/Element/script
-        if (typeof _document.attachEvent === 'object') {
-            // ie
+        if (!/opera/i.test(navigator.userAgent)) {
+            // Naively assume we're in IE
             try {
                 script.htmlFor = script.id;
                 script.event = "onclick";
             } catch (x) {}
             script.async = true;
-        } else if (typeof _document.attachEvent === 'function') {
+        } else {
             // Opera, second sync script hack
             script2 = _document.createElement('script');
             script2.text = "try{var a = document.getElementById('"+script.id+"'); if(a)a.onerror();}catch(x){};";
             script.async = script2.async = false;
         }
-    } else {
+    }
+    if (typeof script.async !== 'undefined') {
         script.async = true;
     }
 
@@ -1300,19 +1328,15 @@ var chunkingTestUncached = SockJS.chunkingTest = function(base_url, callback, op
 var chunkingTest = function() {
     var value;
     var t0 = 0;
-console.log('????');
     return function (base_url, callback) {
         var t1 = (new Date()).getTime();
         if (t1 - t0 > 10000) {
-console.log('DT>10000', t1, t0);
             chunkingTestUncached(base_url, function (v) {
                                      value = v;
                                      t0 = (new Date()).getTime();
-console.log('DTCACHING', value, t0);
                                      callback(value);
                                  });
         } else {
-console.log('DTCACHED', value);
             setTimeout(function() {
                            callback(value);
                        }, 0);
@@ -1612,7 +1636,7 @@ var XhrReceiver = function(url, opts) {
         }
         if (xhr.readyState === 4 || abort_reason) {
             var reason = abort_reason ? 'user' :
-                (xhr.status === 200 ? 'network' : 'permanent');
+                ((xhr.status === 200 || xhr.status === 0) ? 'network' : 'permanent');
             that.xhr_close = null;
             that.dispatchEvent(new SimpleEvent('close', {reason: reason}));
         }
