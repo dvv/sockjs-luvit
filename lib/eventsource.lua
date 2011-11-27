@@ -26,20 +26,21 @@ escape_for_eventsource1 = function(str)
   print(str, '->', s)
   return s
 end
-return {
-  GET = function(self, options, sid)
-    self:handle_balancer_cookie()
-    self:send(200, '\r\n', {
-      ['Content-Type'] = 'text/event-stream; charset=UTF-8',
-      ['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    }, false)
-    self.protocol = 'eventsource'
-    self.curr_size, self.max_size = 0, options.response_limit
-    self.send_frame = function(self, payload, continue)
-      return self:write_frame('data: ' .. payload .. '\r\n\r\n', continue)
-    end
-    local session = self:create_session(sid, options)
-    session:bind(self)
-    return 
+local handler
+handler = function(self, options, sid)
+  self:handle_balancer_cookie()
+  self:send(200, '\r\n', {
+    ['Content-Type'] = 'text/event-stream; charset=UTF-8',
+    ['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+  }, false)
+  self.protocol = 'eventsource'
+  self.curr_size, self.max_size = 0, options.response_limit
+  self.send_frame = function(self, payload, continue)
+    return self:write_frame('data: ' .. payload .. '\r\n\r\n', continue)
   end
+  self:create_session(self.req, self, sid, options)
+  return 
+end
+return {
+  GET = handler
 }

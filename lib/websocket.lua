@@ -47,7 +47,6 @@ handler = function(self, options)
   location = location .. '://' .. self.req.headers.host .. self.req.real_url
   self:nodelay(true)
   self.protocol = 'websocket'
-  local session = self:create_session(nil, options)
   local ver = self.req.headers['sec-websocket-version']
   local shaker
   if ver == '8' or ver == '7' or ver == '13' then
@@ -56,7 +55,7 @@ handler = function(self, options)
     shaker = hixie76
   end
   shaker(self, origin, location, function()
-    return session:bind(self)
+    return self:create_session(self.req, self, nil, options)
   end)
   return 
 end

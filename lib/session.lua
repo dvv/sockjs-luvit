@@ -37,7 +37,7 @@ Session = (function()
         reason
       })
     end,
-    bind = function(self, conn)
+    bind = function(self, req, conn)
       if self.conn then
         conn:send_frame(Session.closing_frame(2010, 'Another connection still open'))
         return 
@@ -64,6 +64,7 @@ Session = (function()
       --error(err)
       conn\close()
     ]==]
+      self.req = req
       if self.ready_state == Session.CONNECTING then
         self.conn:send_frame('o')
         self.ready_state = Session.OPEN
@@ -179,6 +180,7 @@ Session = (function()
       self.sid = sid
       self.heartbeat_delay = options.heartbeat_delay
       self.disconnect_delay = options.disconnect_delay
+      self.prefix = options.prefix
       self.id = uuid()
       self.send_buffer = { }
       self.ready_state = Session.CONNECTING

@@ -49,10 +49,9 @@ handler = (options) =>
   @nodelay true
   @protocol = 'websocket'
   -- register session
-  session = @create_session nil, options
   ver = @req.headers['sec-websocket-version']
   shaker = if ver == '8' or ver == '7' or ver == '13' then hybi10 else hixie76
-  shaker self, origin, location, () -> session\bind self
+  shaker self, origin, location, () -> @create_session @req, self, nil, options
   return
 
 return {

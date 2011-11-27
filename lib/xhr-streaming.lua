@@ -16,8 +16,7 @@ handler = function(self, options, sid)
   self.send_frame = function(self, payload, continue)
     return self:write_frame(payload .. '\n', continue)
   end
-  local session = self:create_session(sid, options)
-  session:bind(self)
+  self:create_session(self.req, self, sid, options)
   return 
 end
 return {

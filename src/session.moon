@@ -50,6 +50,7 @@ class Session extends EventEmitter
     -- setup options
     @heartbeat_delay = options.heartbeat_delay
     @disconnect_delay = options.disconnect_delay
+    @prefix = options.prefix
     @id = uuid()
 
     -- allocate buffer for outgoing messages
@@ -72,7 +73,7 @@ class Session extends EventEmitter
   -- bind a connection to this session
   --
 
-  bind: (conn) =>
+  bind: (req, conn) =>
     --d('BIND', @sid, @id)
 
     -- can't bind more than one connection
@@ -104,6 +105,9 @@ class Session extends EventEmitter
       --error(err)
       conn\close()
     ]==]
+
+    -- memorize request parameters
+    @req = req
 
     -- send the opening frame
     if @ready_state == Session.CONNECTING

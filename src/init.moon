@@ -77,7 +77,9 @@ return (root, options) ->
       res\close()
 
     res.get_session = (sid) => Session.get sid
-    res.create_session = (sid, options) => Session.get_or_create sid, options
+    res.create_session = (req, conn, sid, options) =>
+      session = Session.get_or_create sid, options
+      session\bind req, conn
 
     -- strip trailing slash
     path = req.uri.pathname

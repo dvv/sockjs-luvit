@@ -62,8 +62,9 @@ return function(root, options)
     res.get_session = function(self, sid)
       return Session.get(sid)
     end
-    res.create_session = function(self, sid, options)
-      return Session.get_or_create(sid, options)
+    res.create_session = function(self, req, conn, sid, options)
+      local session = Session.get_or_create(sid, options)
+      return session:bind(req, conn)
     end
     local path = req.uri.pathname
     if sub(path, -1, -1) == '/' then

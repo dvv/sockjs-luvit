@@ -23,23 +23,23 @@ escape_for_eventsource1 = (str) ->
 --
 -- eventsource request handler
 --
+handler = (options, sid) =>
+  @handle_balancer_cookie()
+  -- N.B. Opera needs one more new line at the start
+  @send 200, '\r\n', {
+    ['Content-Type']: 'text/event-stream; charset=UTF-8'
+    ['Cache-Control']: 'no-store, no-cache, must-revalidate, max-age=0'
+  }, false
+  -- upgrade response to session handler
+  @protocol = 'eventsource'
+  @curr_size, @max_size = 0, options.response_limit
+  @send_frame = (payload, continue) =>
+    @write_frame('data: ' .. payload .. '\r\n\r\n', continue)
+  -- register session
+  @create_session @req, self, sid, options
+  return
+
 return {
 
-  GET: (options, sid) =>
-    @handle_balancer_cookie()
-    -- N.B. Opera needs one more new line at the start
-    @send 200, '\r\n', {
-      ['Content-Type']: 'text/event-stream; charset=UTF-8'
-      ['Cache-Control']: 'no-store, no-cache, must-revalidate, max-age=0'
-    }, false
-    -- upgrade response to session handler
-    @protocol = 'eventsource'
-    @curr_size, @max_size = 0, options.response_limit
-    @send_frame = (payload, continue) =>
-      @write_frame('data: ' .. payload .. '\r\n\r\n', continue)
-    -- register session
-    session = @create_session sid, options
-    session\bind self
-    return
-
+  GET: handler
 }

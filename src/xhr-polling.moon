@@ -14,8 +14,7 @@ handler = (options, sid) =>
   @send_frame = (payload, continue) =>
     @write_frame(payload .. '\n', continue)
   -- register session
-  session = @create_session sid, options
-  session\bind self
+  @create_session @req, self, sid, options
   return
 
 return {
