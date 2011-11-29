@@ -49,7 +49,7 @@ return (root, options) ->
   return if not options
   -- default options
   setmetatable options, __index: {
-    sockjs_url: 'http://sockjs.github.com/sockjs-client/sockjs-latest.min.js'
+    sockjs_url: 'http://cdn.sockjs.org/sockjs-0.1.min.js'
     heartbeat_delay: 25000
     disconnect_delay: 5000
     response_limit: 128 * 1024

@@ -6,9 +6,14 @@ do
   local _table_0 = require('timer')
   set_timeout, clear_timer = _table_0.set_timeout, _table_0.clear_timer
 end
-local encode, decode = JSON.encode, JSON.decode
+local encode = JSON.encode
 local uuid = require('server/modules/uuid')
 local Table = require('table')
+local join = Table.concat
+local quote
+quote = function(str)
+  local quoted = encode(string)
+end
 local sessions = { }
 _G.s = function()
   return sessions
@@ -120,7 +125,18 @@ Session = (function()
       if #self.send_buffer > 0 then
         local messages = self.send_buffer
         self.send_buffer = { }
-        self.conn:send_frame('a' .. encode(messages))
+        local quoted = (function()
+          local _accum_0 = { }
+          local _len_0 = 0
+          local _list_0 = messages
+          for _index_0 = 1, #_list_0 do
+            local m = _list_0[_index_0]
+            _len_0 = _len_0 + 1
+            _accum_0[_len_0] = quote(m)
+          end
+          return _accum_0
+        end)()
+        self.conn:send_frame('a' .. '[' .. join(quoted, ',') .. ']')
       else
         if self.to_tref then
           clear_timer(self.to_tref)

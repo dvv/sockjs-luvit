@@ -5,9 +5,14 @@
 
 EventEmitter = setmetatable {}, __index: require('emitter').meta
 import set_timeout, clear_timer from require 'timer'
-import encode, decode from JSON
+import encode from JSON
 uuid = require 'server/modules/uuid'
 Table = require 'table'
+join = Table.concat
+
+quote = (str) ->
+  -- TODO: implement https://github.com/sockjs/sockjs-node/commit/e0e7113f0f8bd8e5fea25e1eb2a8b1fe1413da2c
+  quoted = encode string
 
 --
 -- Session -- bidirectional WebSocket-like channel between client and server
@@ -204,7 +209,8 @@ class Session extends EventEmitter
       -- send them as encoded array, and empty the queue
       messages = @send_buffer
       @send_buffer = {}
-      @conn\send_frame 'a' .. encode(messages)
+      quoted = [quote(m) for m in *messages]
+      @conn\send_frame('a' .. '[' .. join(quoted, ',') .. ']')
 
     -- queue is empty
     else
