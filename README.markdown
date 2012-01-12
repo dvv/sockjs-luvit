@@ -1,5 +1,14 @@
 # SockJS-luvit
 
+**Please, watch up-to-date [version](https://github.com/luvit/sockjs)**
+
+
+
+
+
+
+
+
 SockJS server written in [Lua](http://www.lua.org) to run under [Luvit](https://github.com/creationix/luvit). Supports all transports.
 
 ## Installation
